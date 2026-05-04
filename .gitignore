@@ -12,6 +12,7 @@ logs/*.csv
 logs/*.txt
 downloads/*
 state/*.json
+state/*.txt
 
 # Build artifacts
 build/

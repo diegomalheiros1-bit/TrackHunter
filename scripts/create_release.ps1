@@ -36,7 +36,7 @@ New-Item -ItemType Directory -Force -Path `
     (Join-Path $releaseDir "logs"), `
     (Join-Path $releaseDir "state") | Out-Null
 
-Copy-Item -Path (Join-Path $root "tracklist.txt") -Destination (Join-Path $releaseDir "tracklist.txt") -Force
+Copy-Item -Path (Join-Path $root "tracklist.txt") -Destination (Join-Path $releaseDir "state\tracklist.txt") -Force
 
 @"
 TrackHunter v2.0
@@ -51,13 +51,13 @@ Importante
 ----------
 - Nao mova o arquivo TrackHunter.exe sozinho.
 - Mantenha a pasta _internal junto dele.
-- Edite o arquivo tracklist.txt antes de iniciar, se quiser trocar as musicas.
+- Use o botao Tracklist no programa para adicionar, editar e salvar suas musicas.
 
 Pastas
 ------
 - downloads: musicas baixadas.
 - logs: logs da execucao.
-- state: historico local do programa.
+- state: historico local e tracklist salva pelo programa.
 
 Se o Windows mostrar alerta de seguranca
 ----------------------------------------

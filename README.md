@@ -133,7 +133,8 @@ python -m trackhunter.app
 Pela tela voce pode:
 
 - informar usuario e senha do MUZPA
-- escolher tracklist, pasta de downloads, logs e historico
+- abrir o editor Tracklist para adicionar, editar e salvar musicas sem mexer em arquivo manualmente
+- escolher a pasta de downloads e abrir arquivos gerados
 - ligar/desligar login manual, headless e opcoes extras
 - acompanhar o log em tempo real
 

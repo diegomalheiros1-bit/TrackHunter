@@ -5,7 +5,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QThread, Signal, QUrl
-from PySide6.QtGui import QColor, QDesktopServices, QPainter, QPalette, QPen
+from PySide6.QtGui import QColor, QDesktopServices, QPainter, QPalette, QPen, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QMessageBox,
+    QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QSizePolicy,
@@ -183,6 +184,20 @@ QListWidget {
     border-radius: 10px;
     padding: 6px;
     outline: 0;
+}
+QPlainTextEdit {
+    background: #0b1018;
+    border: 1px solid #253041;
+    border-radius: 10px;
+    color: #f8fafc;
+    font-family: Consolas, Segoe UI;
+    font-size: 10pt;
+    padding: 10px;
+    selection-background-color: #2563eb;
+    placeholder-text-color: #B0B0B0;
+}
+QPlainTextEdit:focus {
+    border-color: #3b82f6;
 }
 QListWidget::item {
     border-radius: 7px;
@@ -398,6 +413,14 @@ class IconLineEdit(QLineEdit):
                     rect.topLeft() + QPointF(2, 6),
                 ]
             )
+            return
+
+        if self.icon_name == "music":
+            painter.drawLine(rect.x() + 7, rect.y() + 4, rect.x() + 7, rect.y() + 13)
+            painter.drawLine(rect.x() + 7, rect.y() + 4, rect.x() + 14, rect.y() + 6)
+            painter.drawLine(rect.x() + 14, rect.y() + 6, rect.x() + 14, rect.y() + 15)
+            painter.drawEllipse(QRectF(rect.x() + 3, rect.y() + 12, 6, 4))
+            painter.drawEllipse(QRectF(rect.x() + 10, rect.y() + 14, 6, 4))
 
     def _draw_eye_icon(self, painter: QPainter, rect: QRectF, hidden: bool) -> None:
         points = [
@@ -597,6 +620,134 @@ class SettingsDialog(QDialog):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.history_path)))
 
 
+class TracklistDialog(QDialog):
+    def __init__(self, parent, tracklist_path: str) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Editar Tracklist")
+        self.resize(840, 620)
+        self.setMinimumSize(720, 540)
+        self.tracklist_path = Path(tracklist_path)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
+
+        title = QLabel("Tracklist")
+        title.setObjectName("SectionTitle")
+        layout.addWidget(title)
+
+        hint = QLabel("Adicione, edite ou cole suas músicas abaixo. Use uma faixa por linha, de preferência no formato Artista - Título.")
+        hint.setObjectName("Hint")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        add_panel = Panel("Adicionar faixa")
+        add_panel.layout.setContentsMargins(14, 12, 14, 12)
+        add_grid = QGridLayout()
+        add_grid.setContentsMargins(0, 0, 0, 0)
+        add_grid.setHorizontalSpacing(10)
+        add_grid.setVerticalSpacing(6)
+        self.new_track_input = IconLineEdit("music")
+        self.new_track_input.setPlaceholderText("Ex: Artista - Título")
+        self.new_track_input.setMinimumWidth(360)
+        self.new_track_input.setMaximumWidth(620)
+        add_btn = QPushButton("Adicionar")
+        add_btn.setObjectName("BrowseButton")
+        add_btn.clicked.connect(self._add_track)
+        self.new_track_input.returnPressed.connect(self._add_track)
+        label = QLabel("Música:")
+        label.setObjectName("FieldLabel")
+        label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        label.setFixedHeight(38)
+        label.setFixedWidth(86)
+        add_grid.addWidget(label, 0, 0)
+        add_grid.addWidget(self.new_track_input, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        add_grid.addWidget(add_btn, 0, 2)
+        add_grid.setColumnStretch(1, 1)
+        add_panel.layout.addLayout(add_grid)
+        layout.addWidget(add_panel)
+
+        editor_panel = Panel("Lista de músicas")
+        editor_panel.layout.setContentsMargins(14, 12, 14, 12)
+        self.editor = QPlainTextEdit()
+        self.editor.setPlaceholderText("Artista - Título\nOutro Artista - Outra Música")
+        self.editor.textChanged.connect(self._refresh_status)
+        editor_panel.layout.addWidget(self.editor, 1)
+
+        footer = QHBoxLayout()
+        footer.setContentsMargins(0, 0, 0, 0)
+        footer.setSpacing(10)
+        self.status_label = QLabel("0 faixas")
+        self.status_label.setObjectName("HelpLabel")
+        footer.addWidget(self.status_label, 1)
+        clear_btn = QPushButton("Limpar")
+        clear_btn.setObjectName("GhostButton")
+        clear_btn.clicked.connect(self.editor.clear)
+        footer.addWidget(clear_btn)
+        editor_panel.layout.addLayout(footer)
+        layout.addWidget(editor_panel, 1)
+
+        actions = QHBoxLayout()
+        actions.setContentsMargins(0, 0, 0, 0)
+        actions.setSpacing(10)
+        actions.addStretch(1)
+        cancel_btn = QPushButton("Fechar")
+        cancel_btn.setObjectName("GhostButton")
+        cancel_btn.clicked.connect(self.reject)
+        save_btn = QPushButton("Salvar lista")
+        save_btn.setObjectName("StartButton")
+        save_btn.clicked.connect(self._save_and_close)
+        actions.addWidget(cancel_btn)
+        actions.addWidget(save_btn)
+        layout.addLayout(actions)
+
+        self._load_tracks()
+
+    def _load_tracks(self) -> None:
+        if self.tracklist_path.exists():
+            self.editor.setPlainText(self.tracklist_path.read_text(encoding="utf-8-sig").strip())
+        self._refresh_status()
+
+    def _normalized_tracks(self) -> list[str]:
+        return [line.strip() for line in self.editor.toPlainText().splitlines() if line.strip()]
+
+    def _add_track(self) -> None:
+        track = self.new_track_input.text().strip()
+        if not track:
+            return
+        current = self.editor.toPlainText().rstrip()
+        separator = "\n" if current else ""
+        self.editor.setPlainText(f"{current}{separator}{track}")
+        self.editor.moveCursor(QTextCursor.MoveOperation.End)
+        self.new_track_input.clear()
+        self.new_track_input.setFocus()
+
+    def _refresh_status(self) -> None:
+        tracks = self._normalized_tracks()
+        invalid = [track for track in tracks if " - " not in track]
+        plural = "faixa" if len(tracks) == 1 else "faixas"
+        if not tracks:
+            self.status_label.setText("Nenhuma faixa cadastrada.")
+            self.status_label.setObjectName("WarningLabel")
+        elif invalid:
+            self.status_label.setText(f"{len(tracks)} {plural}. Atenção: {len(invalid)} fora do formato Artista - Título.")
+            self.status_label.setObjectName("WarningLabel")
+        else:
+            self.status_label.setText(f"{len(tracks)} {plural} prontas para execução.")
+            self.status_label.setObjectName("SuccessLabel")
+        self.status_label.style().unpolish(self.status_label)
+        self.status_label.style().polish(self.status_label)
+
+    def _save_and_close(self) -> None:
+        tracks = self._normalized_tracks()
+        self.tracklist_path.parent.mkdir(parents=True, exist_ok=True)
+        content = "\n".join(tracks)
+        if content:
+            content += "\n"
+        self.tracklist_path.write_text(content, encoding="utf-8")
+        self.accept()
+
+
 class HistoryDialog(QDialog):
     def __init__(self, parent, history_path: str) -> None:
         super().__init__(parent)
@@ -670,6 +821,7 @@ class TrackHunterWindow(QMainWindow):
 
         self.logs_path = str(self.base_dir / "logs")
         self.history_path = str(self.base_dir / "state" / "track_history.json")
+        self.tracklist_path = str(self.base_dir / "state" / "tracklist.txt")
 
         self._build_ui()
         self._set_defaults()
@@ -829,9 +981,9 @@ class TrackHunterWindow(QMainWindow):
         line_edit.setPalette(palette)
 
     def _validate_tracklist_status(self) -> None:
-        path = Path(self.tracklist_input.text().strip())
+        path = Path(self.tracklist_path)
         if not path.exists():
-            self.tracklist_status_label.setText("Arquivo não encontrado.")
+            self.tracklist_status_label.setText("Nenhuma tracklist salva ainda.")
             self.tracklist_status_label.setObjectName("WarningLabel")
             self.tracklist_status_label.style().unpolish(self.tracklist_status_label)
             self.tracklist_status_label.style().polish(self.tracklist_status_label)
@@ -844,7 +996,7 @@ class TrackHunterWindow(QMainWindow):
             self.tracklist_status_label.setObjectName("WarningLabel")
         else:
             plural = "faixa detectada" if track_count == 1 else "faixas detectadas"
-            self.tracklist_status_label.setText(f"Arquivo válido, {track_count} {plural}.")
+            self.tracklist_status_label.setText(f"Tracklist salva: {track_count} {plural}.")
             self.tracklist_status_label.setObjectName("SuccessLabel")
 
         self.tracklist_status_label.style().unpolish(self.tracklist_status_label)
@@ -1001,16 +1153,14 @@ class TrackHunterWindow(QMainWindow):
         files_layout.setRowMinimumHeight(0, 66)
         files_layout.setRowMinimumHeight(1, 40)
 
-        self.tracklist_input = IconLineEdit("folder")
         self.downloads_input = IconLineEdit("folder")
-        self.tracklist_input.setMaximumWidth(620)
         self.downloads_input.setMaximumWidth(620)
-        self._prepare_input(self.tracklist_input)
         self._prepare_input(self.downloads_input)
 
-        tracklist_btn = QPushButton("Navegar")
+        tracklist_btn = QPushButton("Tracklist")
         tracklist_btn.setObjectName("BrowseButton")
-        tracklist_btn.clicked.connect(self._pick_tracklist)
+        tracklist_btn.setFixedWidth(132)
+        tracklist_btn.clicked.connect(self.open_tracklist_editor)
         downloads_btn = QPushButton("Navegar")
         downloads_btn.setObjectName("BrowseButton")
         downloads_btn.clicked.connect(lambda: self._pick_directory(self.downloads_input))
@@ -1018,15 +1168,14 @@ class TrackHunterWindow(QMainWindow):
         tracklist_stack = QVBoxLayout()
         tracklist_stack.setContentsMargins(0, 0, 0, 0)
         tracklist_stack.setSpacing(4)
-        tracklist_stack.addWidget(self.tracklist_input, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.tracklist_help_label = self._help_label("(Formato esperado: Artista - Título, uma música por linha)")
-        self.tracklist_status_label = self._help_label("Selecione uma tracklist para validar.", "warning")
+        self.tracklist_help_label = self._help_label("Edite a lista diretamente no software. Formato recomendado: Artista - Título.")
+        self.tracklist_status_label = self._help_label("Abra a Tracklist para cadastrar músicas.", "warning")
         tracklist_stack.addWidget(self.tracklist_help_label)
         tracklist_stack.addWidget(self.tracklist_status_label)
 
-        files_layout.addWidget(self._field_label("Tracklist (.txt)"), 0, 0)
+        files_layout.addWidget(self._field_label("Tracklist"), 0, 0)
         files_layout.addLayout(tracklist_stack, 0, 1)
-        files_layout.addWidget(tracklist_btn, 0, 2, alignment=Qt.AlignmentFlag.AlignTop)
+        files_layout.addWidget(tracklist_btn, 0, 2, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         files_layout.addWidget(self._field_label("Downloads"), 1, 0)
         files_layout.addWidget(self.downloads_input, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -1164,13 +1313,24 @@ class TrackHunterWindow(QMainWindow):
         self._apply_responsive_layout()
 
     def _set_defaults(self) -> None:
-        self.tracklist_input.setText(str(self.base_dir / "tracklist.txt"))
         self.downloads_input.setText(str(self.base_dir / "downloads"))
         self.manual_login_check.setChecked(False)
         self.timeout_spin.setValue(45000)
+        self._ensure_tracklist_file()
         self._validate_tracklist_status()
         self._reset_summary()
         self._refresh_history_summary()
+
+    def _ensure_tracklist_file(self) -> None:
+        path = Path(self.tracklist_path)
+        if path.exists():
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        legacy_path = self.base_dir / "tracklist.txt"
+        if legacy_path.exists():
+            path.write_text(legacy_path.read_text(encoding="utf-8-sig"), encoding="utf-8")
+            return
+        path.write_text("", encoding="utf-8")
 
     def open_settings(self) -> None:
         dlg = SettingsDialog(
@@ -1185,10 +1345,9 @@ class TrackHunterWindow(QMainWindow):
     def open_history(self) -> None:
         HistoryDialog(self, self.history_path).exec()
 
-    def _pick_tracklist(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "Selecionar Tracklist", str(self.base_dir), "Text files (*.txt)")
-        if path:
-            self.tracklist_input.setText(path)
+    def open_tracklist_editor(self) -> None:
+        dlg = TracklistDialog(self, self.tracklist_path)
+        if dlg.exec():
             self._validate_tracklist_status()
 
     def _pick_directory(self, target: QLineEdit) -> None:
@@ -1200,18 +1359,25 @@ class TrackHunterWindow(QMainWindow):
         if self.worker and self.worker.isRunning():
             return
 
-        tracklist = self.tracklist_input.text().strip()
+        tracklist = self.tracklist_path
         downloads = self.downloads_input.text().strip()
         logs = self.logs_path.strip()
         history = self.history_path.strip()
 
         if not tracklist or not downloads or not logs or not history:
-            QMessageBox.warning(self, "Campos obrigatórios", "Preencha tracklist, downloads e configurações.")
+            QMessageBox.warning(self, "Campos obrigatórios", "Preencha a tracklist, downloads e configurações.")
             return
 
-        if not Path(tracklist).exists():
-            QMessageBox.warning(self, "Tracklist", "Arquivo de tracklist não encontrado. Selecione um arquivo .txt válido.")
-            return
+        if not self.retry_missing_check.isChecked():
+            try:
+                load_tracklist(Path(tracklist))
+            except Exception:
+                QMessageBox.warning(
+                    self,
+                    "Tracklist",
+                    "A tracklist está vazia. Clique em 'Tracklist' e cadastre pelo menos uma música antes de iniciar.",
+                )
+                return
 
         email = self.email_input.text().strip()
         password = self.password_input.text()

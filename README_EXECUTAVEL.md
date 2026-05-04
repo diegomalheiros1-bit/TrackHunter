@@ -15,10 +15,11 @@ Use o ZIP em `release/TrackHunter-v2.0.zip` para distribuir o programa para usua
 
 ## Importante
 
-- Edite `tracklist.txt` antes de rodar.
+- Na interface, use o botao `Tracklist` para adicionar, editar e salvar as musicas.
 - Downloads vao para `downloads/`.
 - Logs vao para `logs/`.
 - Historico fica em `state/track_history.json`.
+- A lista salva fica em `state/tracklist.txt`.
 
 ## Estrutura esperada
 
