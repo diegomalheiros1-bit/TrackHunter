@@ -6,7 +6,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QThread, Signal, QUrl
-from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPalette, QPen, QPixmap, QTextCursor
+from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -69,6 +69,13 @@ QLabel#SectionTitle {
     color: #f8fafc;
     font-size: 12pt;
     font-weight: 700;
+}
+QLabel#MusicIcon {
+    color: #7dd3fc;
+    font-size: 16pt;
+    font-weight: 800;
+    min-width: 22px;
+    max-width: 22px;
 }
 QLabel#Hint, QLabel#FieldLabel, QLabel#ProgressText {
     color: #94a3b8;
@@ -660,38 +667,29 @@ class TracklistDialog(QDialog):
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
-        add_panel = Panel("Adicionar faixa")
-        add_panel.layout.setContentsMargins(14, 12, 14, 12)
-        add_grid = QGridLayout()
-        add_grid.setContentsMargins(0, 0, 0, 0)
-        add_grid.setHorizontalSpacing(10)
-        add_grid.setVerticalSpacing(6)
-        self.new_track_input = IconLineEdit("music")
-        self.new_track_input.setPlaceholderText("Ex: Kill Me Slow ou Artista - Título")
-        self.new_track_input.setMinimumWidth(360)
-        self.new_track_input.setMaximumWidth(620)
-        add_btn = QPushButton("Adicionar")
-        add_btn.setObjectName("BrowseButton")
-        add_btn.clicked.connect(self._add_track)
-        self.new_track_input.returnPressed.connect(self._add_track)
-        label = QLabel("Música:")
-        label.setObjectName("FieldLabel")
-        label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
-        label.setFixedHeight(38)
-        label.setFixedWidth(86)
-        add_grid.addWidget(label, 0, 0)
-        add_grid.addWidget(self.new_track_input, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        add_grid.addWidget(add_btn, 0, 2)
-        add_grid.setColumnStretch(1, 1)
-        add_panel.layout.addLayout(add_grid)
-        layout.addWidget(add_panel)
+        editor_panel = QFrame()
+        editor_panel.setObjectName("Panel")
+        editor_panel_layout = QVBoxLayout(editor_panel)
+        editor_panel_layout.setContentsMargins(14, 12, 14, 12)
+        editor_panel_layout.setSpacing(10)
 
-        editor_panel = Panel("Lista de músicas")
-        editor_panel.layout.setContentsMargins(14, 12, 14, 12)
+        editor_header = QHBoxLayout()
+        editor_header.setContentsMargins(0, 0, 0, 0)
+        editor_header.setSpacing(8)
+        music_icon = QLabel("♪")
+        music_icon.setObjectName("MusicIcon")
+        music_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        editor_title = QLabel("Tracklist")
+        editor_title.setObjectName("SectionTitle")
+        editor_header.addWidget(music_icon)
+        editor_header.addWidget(editor_title)
+        editor_header.addStretch(1)
+        editor_panel_layout.addLayout(editor_header)
+
         self.editor = QPlainTextEdit()
         self.editor.setPlaceholderText("Kill Me Slow (Agents Of Time Remix)\nArtista - Título")
         self.editor.textChanged.connect(self._refresh_status)
-        editor_panel.layout.addWidget(self.editor, 1)
+        editor_panel_layout.addWidget(self.editor, 1)
 
         footer = QHBoxLayout()
         footer.setContentsMargins(0, 0, 0, 0)
@@ -703,7 +701,7 @@ class TracklistDialog(QDialog):
         clear_btn.setObjectName("GhostButton")
         clear_btn.clicked.connect(self.editor.clear)
         footer.addWidget(clear_btn)
-        editor_panel.layout.addLayout(footer)
+        editor_panel_layout.addLayout(footer)
         layout.addWidget(editor_panel, 1)
 
         actions = QHBoxLayout()
@@ -712,9 +710,11 @@ class TracklistDialog(QDialog):
         actions.addStretch(1)
         cancel_btn = QPushButton("Fechar")
         cancel_btn.setObjectName("GhostButton")
+        cancel_btn.setFixedSize(134, 44)
         cancel_btn.clicked.connect(self.reject)
         save_btn = QPushButton("Salvar lista")
         save_btn.setObjectName("StartButton")
+        save_btn.setFixedSize(134, 44)
         save_btn.clicked.connect(self._save_and_close)
         actions.addWidget(cancel_btn)
         actions.addWidget(save_btn)
@@ -729,17 +729,6 @@ class TracklistDialog(QDialog):
 
     def _normalized_tracks(self) -> list[str]:
         return [line.strip() for line in self.editor.toPlainText().splitlines() if line.strip()]
-
-    def _add_track(self) -> None:
-        track = self.new_track_input.text().strip()
-        if not track:
-            return
-        current = self.editor.toPlainText().rstrip()
-        separator = "\n" if current else ""
-        self.editor.setPlainText(f"{current}{separator}{track}")
-        self.editor.moveCursor(QTextCursor.MoveOperation.End)
-        self.new_track_input.clear()
-        self.new_track_input.setFocus()
 
     def _refresh_status(self) -> None:
         tracks = self._normalized_tracks()
