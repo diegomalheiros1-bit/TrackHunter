@@ -1,0 +1,143 @@
+from typing import Iterable, List
+
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+
+from .history import downloaded_file_name, is_downloaded, is_file_downloaded, is_missing, mark_downloaded, mark_missing
+from .models import TrackResult
+from .search import best_download_candidate_for_track, find_search_input
+from .utils import build_fallback_query, normalize_text
+
+
+def click_download(page: Page, candidate):
+    """
+    Envolve o clique em um contexto expect_download para capturar o arquivo.
+    Timeout curto evita que candidatos ruins segurem a execucao por muito tempo.
+    """
+    with page.expect_download(timeout=5000) as dl_info:
+        candidate.click(timeout=3000, force=True)
+    return dl_info.value
+
+
+def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, force_download: bool = False) -> List[TrackResult]:
+    """
+    Processa a tracklist faixa a faixa.
+    Fluxo por faixa:
+    1) pula faixas ja baixadas no historico
+    2) busca completa
+    3) fallback "titulo + versao" (sem artista), se aplicavel
+    4) tenta baixar via melhor candidato
+    5) atualiza historico e registra status final
+    """
+    results: List[TrackResult] = []
+    track_list = list(tracks)
+    total = len(track_list)
+
+    def print_progress(current: int, status: str) -> None:
+        """Mostra progresso simples no terminal apos cada faixa processada."""
+        percent = (current / total * 100) if total else 100
+        print(f"    Status: {status} | Progresso: {current}/{total} ({percent:.1f}%)")
+
+    for idx, track in enumerate(track_list, start=1):
+        print(f"[{idx}/{total}] Buscando: {track}")
+        try:
+            # Evita downloads repetidos entre execucoes diferentes, mas so pula
+            # quando o arquivo registrado ainda existe fisicamente em downloads/.
+            if not force_download and is_downloaded(history, track):
+                known_file = downloaded_file_name(history, track)
+                if known_file and (downloads_dir / known_file).exists():
+                    if is_missing(history, track):
+                        mark_downloaded(history, track, known_file)
+                        results.append(TrackResult(track, "baixada", "Resolvida: faixa pendente ja existia no historico", file_name=known_file))
+                        print("    Resolvida: pendencia ja estava baixada no historico")
+                        print_progress(idx, "baixada")
+                    else:
+                        results.append(TrackResult(track, "ja_baixada", "Ignorada: faixa ja existe no historico", file_name=known_file))
+                        print("    Ignorada: ja baixada no historico")
+                        print_progress(idx, "ja_baixada")
+                    continue
+                print("    Historico encontrado, mas arquivo ausente; baixando novamente")
+
+            search_input = find_search_input(page)
+            if not search_input:
+                results.append(TrackResult(track, "erro", "Campo de busca nao encontrado"))
+                print_progress(idx, "erro")
+                continue
+
+            # Primeira tentativa usa texto completo da tracklist.
+            attempts = [("busca_completa", track)]
+            fallback_query = build_fallback_query(track)
+            # Segunda tentativa remove artista quando a consulta muda de fato.
+            if normalize_text(fallback_query) != normalize_text(track):
+                attempts.append(("fallback_titulo_versao", fallback_query))
+
+            downloaded = False
+            last_detail = "Sem correspondencia relevante"
+
+            for attempt_name, query in attempts:
+                # Digita consulta e dispara busca.
+                search_input.click()
+                search_input.fill("")
+                search_input.fill(query)
+                search_input.press("Enter")
+                page.wait_for_timeout(2500)
+
+                row, score = best_download_candidate_for_track(page, track)
+                if row is None or score < 6:
+                    last_detail = f"Sem correspondencia relevante ({attempt_name})"
+                    continue
+
+                try:
+                    download = click_download(page, row)
+                except PlaywrightTimeoutError:
+                    # Se o clique nao dispara download, tratamos como ausencia de match util.
+                    last_detail = f"Timeout aguardando download ({attempt_name})"
+                    continue
+
+                if not download:
+                    last_detail = f"Correspondencia sem botao de download ({attempt_name})"
+                    continue
+
+                file_name = download.suggested_filename or ""
+                if file_name and not force_download and is_file_downloaded(history, file_name) and (downloads_dir / file_name).exists():
+                    # Tambem associa esta linha da tracklist ao arquivo conhecido.
+                    was_missing = is_missing(history, track)
+                    mark_downloaded(history, track, file_name)
+                    if was_missing:
+                        results.append(TrackResult(track, "baixada", "Resolvida: arquivo ja existia no historico", file_name=file_name))
+                        print(f"    Resolvida: arquivo ja baixado ({file_name})")
+                        print_progress(idx, "baixada")
+                    else:
+                        results.append(TrackResult(track, "ja_baixada", "Ignorada: arquivo ja existe no historico", file_name=file_name))
+                        print(f"    Ignorada: arquivo ja baixado ({file_name})")
+                        print_progress(idx, "ja_baixada")
+                    downloaded = True
+                    break
+
+                # Persistencia fisica na pasta downloads.
+                target = downloads_dir / file_name if file_name else downloads_dir / f"download_{idx}.bin"
+                download.save_as(target)
+                mark_downloaded(history, track, file_name)
+                results.append(TrackResult(track, "baixada", f"OK ({attempt_name})", file_name=file_name))
+                print(f"    Download iniciado: {file_name}")
+                print_progress(idx, "baixada")
+                page.wait_for_timeout(1200)
+                downloaded = True
+                break
+
+            if not downloaded:
+                mark_missing(history, track, last_detail)
+                results.append(TrackResult(track, "nao_encontrada", last_detail))
+                print_progress(idx, "nao_encontrada")
+        except PlaywrightTimeoutError:
+            # Timeouts de busca/download costumam significar que o site nao retornou
+            # um resultado baixavel para essa faixa dentro do tempo esperado.
+            detail = "Timeout durante busca/download"
+            mark_missing(history, track, detail)
+            results.append(TrackResult(track, "nao_encontrada", detail))
+            print_progress(idx, "nao_encontrada")
+        except Exception as exc:
+            # Qualquer erro inesperado e registrado para auditoria.
+            results.append(TrackResult(track, "erro", f"Falha inesperada: {exc}"))
+            print_progress(idx, "erro")
+
+    return results
