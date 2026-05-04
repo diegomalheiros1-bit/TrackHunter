@@ -1,11 +1,12 @@
 ﻿import os
 import re
 import sys
+import ctypes
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QThread, Signal, QUrl
-from PySide6.QtGui import QColor, QDesktopServices, QPainter, QPalette, QPen, QTextCursor
+from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPalette, QPen, QPixmap, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -32,6 +33,21 @@ from PySide6.QtWidgets import (
 from .cli import run as run_bot
 from .history import load_history
 from .utils import load_tracklist
+
+
+def asset_path(file_name: str) -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).resolve().parent)) / "assets" / file_name
+    return Path(__file__).resolve().parent.parent / "assets" / file_name
+
+
+def set_windows_app_id() -> None:
+    if sys.platform != "win32":
+        return
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("TrackHunter.Desktop.v2")
+    except Exception:
+        return
 
 
 APP_STYLE = """
@@ -809,6 +825,7 @@ class TrackHunterWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("TrackHunter v2.0")
+        self.setWindowIcon(QIcon(str(asset_path("app_icon.png"))))
         self.resize(1180, 820)
         self.setMinimumSize(980, 800)
 
@@ -1110,11 +1127,19 @@ class TrackHunterWindow(QMainWindow):
         root.setContentsMargins(22, 16, 22, 10)
         root.setSpacing(8)
 
-        title = QLabel("TrackHunter")
-        title.setStyleSheet("font-size: 28px; font-weight: 800; color: #f8fafc;")
+        logo_pixmap = QPixmap(str(asset_path("logo.png")))
+        if logo_pixmap.isNull():
+            title = QLabel("TrackHunter")
+            title.setStyleSheet("font-size: 28px; font-weight: 800; color: #f8fafc;")
+            root.addWidget(title)
+        else:
+            title = QLabel()
+            title.setPixmap(logo_pixmap.scaledToHeight(62, Qt.TransformationMode.SmoothTransformation))
+            title.setFixedHeight(68)
+            title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            root.addWidget(title)
         subtitle = QLabel("Automação de busca e downloads de músicas no MUZPA")
         subtitle.setObjectName("Hint")
-        root.addWidget(title)
         root.addWidget(subtitle)
 
         credentials = Panel("Autenticação")
@@ -1185,6 +1210,7 @@ class TrackHunterWindow(QMainWindow):
 
         options = Panel("Opções")
         self.options_panel = options
+        options.layout.setContentsMargins(16, 14, 16, 22)
         self.options_grid = QGridLayout()
         self.options_grid.setContentsMargins(0, 0, 0, 0)
         self.options_grid.setHorizontalSpacing(28)
@@ -1315,7 +1341,7 @@ class TrackHunterWindow(QMainWindow):
     def _set_defaults(self) -> None:
         self.downloads_input.setText(str(self.base_dir / "downloads"))
         self.manual_login_check.setChecked(False)
-        self.timeout_spin.setValue(45000)
+        self.timeout_spin.setValue(30000)
         self._ensure_tracklist_file()
         self._validate_tracklist_status()
         self._reset_summary()
@@ -1474,7 +1500,9 @@ class TrackHunterWindow(QMainWindow):
 
 
 def main() -> None:
+    set_windows_app_id()
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(str(asset_path("app_icon.png"))))
     app.setStyleSheet(APP_STYLE)
     win = TrackHunterWindow()
     win.show()
@@ -1483,3 +1511,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
