@@ -652,7 +652,10 @@ class TracklistDialog(QDialog):
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
-        hint = QLabel("Adicione, edite ou cole suas músicas abaixo. Use uma faixa por linha, de preferência no formato Artista - Título.")
+        hint = QLabel(
+            "Adicione, edite ou cole suas músicas abaixo. Use uma música por linha. "
+            "Você pode informar só o nome ou usar Artista - Título para melhorar a precisão."
+        )
         hint.setObjectName("Hint")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -664,7 +667,7 @@ class TracklistDialog(QDialog):
         add_grid.setHorizontalSpacing(10)
         add_grid.setVerticalSpacing(6)
         self.new_track_input = IconLineEdit("music")
-        self.new_track_input.setPlaceholderText("Ex: Artista - Título")
+        self.new_track_input.setPlaceholderText("Ex: Kill Me Slow ou Artista - Título")
         self.new_track_input.setMinimumWidth(360)
         self.new_track_input.setMaximumWidth(620)
         add_btn = QPushButton("Adicionar")
@@ -686,7 +689,7 @@ class TracklistDialog(QDialog):
         editor_panel = Panel("Lista de músicas")
         editor_panel.layout.setContentsMargins(14, 12, 14, 12)
         self.editor = QPlainTextEdit()
-        self.editor.setPlaceholderText("Artista - Título\nOutro Artista - Outra Música")
+        self.editor.setPlaceholderText("Kill Me Slow (Agents Of Time Remix)\nArtista - Título")
         self.editor.textChanged.connect(self._refresh_status)
         editor_panel.layout.addWidget(self.editor, 1)
 
@@ -740,14 +743,14 @@ class TracklistDialog(QDialog):
 
     def _refresh_status(self) -> None:
         tracks = self._normalized_tracks()
-        invalid = [track for track in tracks if " - " not in track]
+        without_artist = [track for track in tracks if " - " not in track]
         plural = "faixa" if len(tracks) == 1 else "faixas"
         if not tracks:
             self.status_label.setText("Nenhuma faixa cadastrada.")
             self.status_label.setObjectName("WarningLabel")
-        elif invalid:
-            self.status_label.setText(f"{len(tracks)} {plural}. Atenção: {len(invalid)} fora do formato Artista - Título.")
-            self.status_label.setObjectName("WarningLabel")
+        elif without_artist:
+            self.status_label.setText(f"{len(tracks)} {plural} salvas. Dica: incluir o artista pode melhorar a busca.")
+            self.status_label.setObjectName("HelpLabel")
         else:
             self.status_label.setText(f"{len(tracks)} {plural} prontas para execução.")
             self.status_label.setObjectName("SuccessLabel")
