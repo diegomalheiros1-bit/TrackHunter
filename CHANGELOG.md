@@ -3,11 +3,19 @@
 ## Unreleased
 
 ### Added
+- Interface desktop moderna com tema escuro, logo e icone do aplicativo.
+- Editor de Tracklist dentro do software, com suporte a colar, editar e salvar musicas.
+- Suporte visual para buscar por nome da musica ou pelo formato `Artista - Titulo`.
+- Pacote Windows com `TrackHunter.exe` direto para o usuario abrir com dois cliques.
 - Historico local em `state/track_history.json`.
 - Bloqueio automatico para evitar download duplicado de faixas ja baixadas.
 - Registro persistente de musicas nao encontradas, mantendo elas elegiveis para novas buscas.
 - Opcao `--force-download` para ignorar o historico quando necessario.
 - Opcao `--retry-missing-only` para buscar somente faixas nao encontradas anteriormente.
+- Timeout padrao de login ajustado para `30000 ms` na interface.
+
+### Changed
+- A tracklist da interface agora e gerenciada em `state/tracklist.txt`, sem exigir importacao manual de arquivo.
 
 ## v1.0.0 - 2026-04-28
 

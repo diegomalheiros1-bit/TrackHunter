@@ -8,7 +8,7 @@ O TrackHunter automatiza este fluxo:
 
 1. Acessa o Muzpa.
 2. Faz login automatico ou manual.
-3. Le uma `tracklist.txt` flexivel.
+3. Usa uma tracklist flexivel, editavel pela interface ou por arquivo no modo CLI.
 4. Busca uma musica por vez.
 5. Clica no melhor candidato de MP3 encontrado nos resultados.
 6. Salva os arquivos baixados em `downloads/`.
@@ -37,11 +37,12 @@ TrackHunter/
 |  `- models.py      # dataclasses usadas entre os modulos
 |- scripts/          # scripts auxiliares de build/execucao
 |- dist/             # executavel gerado pelo PyInstaller
+|- assets/           # logo e icone do aplicativo
 |- requirements.txt
-|- tracklist.txt
+|- tracklist.txt     # lista exemplo usada para popular o pacote inicial
 |- downloads/        # arquivos MP3 baixados
 |- logs/             # logs de execucao (.txt)
-`- state/            # historico local em JSON
+`- state/            # historico local e tracklist salva
 ```
 
 ## Instalacao
@@ -53,15 +54,24 @@ playwright install chromium
 
 ## Tracklist
 
-Edite o arquivo `tracklist.txt` com uma musica por linha:
+Na interface desktop, clique em `Tracklist` para adicionar, editar, colar e salvar as musicas diretamente no software.
+
+O usuario pode informar apenas o nome da musica ou usar o formato `Artista - Titulo` para melhorar a precisao da busca:
 
 ```text
+Kill Me Slow (Agents Of Time Remix)
 Kaskade & CID ft. Anabel Englund - Vision Blurred (Agents Of Time Remix)
 Agents Of Time & Miss Monique - Rajada
 Supermode - Tell Me Why
 ```
 
-A tracklist e dinamica. Voce pode adicionar, remover ou trocar musicas antes de cada execucao.
+A lista salva pela interface fica em:
+
+```text
+state/tracklist.txt
+```
+
+No modo CLI, tambem e possivel informar um arquivo `.txt` com `--tracklist`.
 
 ## Login Automatico
 
@@ -113,7 +123,7 @@ Usar pastas customizadas:
 python -m trackhunter.cli --tracklist .\tracklist.txt --downloads .\downloads --logs .\logs --history .\state\track_history.json
 ```
 
-## Interface Grafica (Novo)
+## Interface Grafica
 
 Agora o projeto inclui uma interface desktop em `trackhunter/app.py`, para executar sem usar terminal.
 
@@ -135,8 +145,9 @@ Pela tela voce pode:
 - informar usuario e senha do MUZPA
 - abrir o editor Tracklist para adicionar, editar e salvar musicas sem mexer em arquivo manualmente
 - escolher a pasta de downloads e abrir arquivos gerados
-- ligar/desligar login manual, headless e opcoes extras
+- ligar/desligar login manual, busca assistida, baixar novamente e somente nao encontradas
 - acompanhar o log em tempo real
+- conferir resumo de baixadas, ignoradas, nao encontradas e erros
 
 ## Argumentos CLI
 
@@ -177,7 +188,7 @@ Comportamentos importantes:
 
 Para cada faixa, o TrackHunter tenta:
 
-1. Busca completa usando o texto da `tracklist.txt`.
+1. Busca completa usando o texto salvo na tracklist.
 2. Busca alternativa usando `titulo + versao/remix`, sem artista.
 
 Ele prioriza botoes MP3, usando ZIP/Download como fallback quando necessario.
@@ -206,6 +217,7 @@ Estes arquivos/pastas sao artefatos locais de execucao e ficam fora do Git:
 - `logs/*.txt`
 - `logs/*.csv`
 - `state/*.json`
+- `state/*.txt`
 - `.env`
 
 ## Observacoes
