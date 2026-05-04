@@ -10,5 +10,5 @@ python -m playwright install chromium
 pyinstaller --noconfirm --clean TrackHunterApp.spec
 
 echo.
-echo Build concluido em: dist\TrackHunterApp
+echo Build concluido em: dist\TrackHunter
 pause

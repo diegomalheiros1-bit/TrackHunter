@@ -1,12 +1,12 @@
 $ErrorActionPreference = "Stop"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
-$distApp = Join-Path $root "dist\TrackHunterApp"
+$distApp = Join-Path $root "dist\TrackHunter"
 $releaseRoot = Join-Path $root "release"
 $releaseDir = Join-Path $releaseRoot "TrackHunter-v2.0"
 $zipPath = Join-Path $releaseRoot "TrackHunter-v2.0.zip"
 
-if (-not (Test-Path -LiteralPath (Join-Path $distApp "TrackHunterApp.exe"))) {
+if (-not (Test-Path -LiteralPath (Join-Path $distApp "TrackHunter.exe"))) {
     throw "Executavel nao encontrado. Rode o build antes: pyinstaller --noconfirm --clean TrackHunterApp.spec"
 }
 
@@ -39,23 +39,17 @@ New-Item -ItemType Directory -Force -Path `
 Copy-Item -Path (Join-Path $root "tracklist.txt") -Destination (Join-Path $releaseDir "tracklist.txt") -Force
 
 @"
-@echo off
-cd /d "%~dp0"
-start "" "%~dp0TrackHunterApp.exe"
-"@ | Set-Content -Path (Join-Path $releaseDir "Abrir TrackHunter.bat") -Encoding ASCII
-
-@"
 TrackHunter v2.0
 ================
 
 Como abrir
 ----------
 1. Extraia a pasta inteira do ZIP.
-2. Clique duas vezes em "Abrir TrackHunter.bat".
+2. Clique duas vezes em "TrackHunter.exe".
 
 Importante
 ----------
-- Nao mova o arquivo TrackHunterApp.exe sozinho.
+- Nao mova o arquivo TrackHunter.exe sozinho.
 - Mantenha a pasta _internal junto dele.
 - Edite o arquivo tracklist.txt antes de iniciar, se quiser trocar as musicas.
 

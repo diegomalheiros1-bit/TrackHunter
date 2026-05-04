@@ -7,11 +7,8 @@ Use o ZIP em `release/TrackHunter-v2.0.zip` para distribuir o programa para usua
 - `release/TrackHunter-v2.0.zip`
   - Pacote pronto para enviar ao usuario.
 
-- `release/TrackHunter-v2.0/Abrir TrackHunter.bat`
-  - Botao de abertura para usuario leigo.
-
-- `release/TrackHunter-v2.0/TrackHunterApp.exe`
-  - Executavel principal, que deve permanecer junto da pasta `_internal`.
+- `release/TrackHunter-v2.0/TrackHunter.exe`
+  - Executavel principal. O usuario deve clicar duas vezes nele para abrir o programa.
 
 - `scripts/`
   - Contem scripts auxiliares para desenvolvimento, build e execucao via Python.
@@ -26,6 +23,7 @@ Use o ZIP em `release/TrackHunter-v2.0.zip` para distribuir o programa para usua
 ## Estrutura esperada
 
 Nao mova o executavel sozinho. Para distribuir, envie o arquivo `release/TrackHunter-v2.0.zip`.
+Depois de extrair o ZIP, o usuario deve abrir `TrackHunter.exe`.
 
 ## Gerar um novo pacote
 
