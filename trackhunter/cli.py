@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 # Ponto de entrada do Playwright sincronizado.
@@ -60,6 +61,7 @@ def run(argv: list[str] | None = None) -> None:
     parser.add_argument("--email", default=None, help="Email de login do Muzpa")
     parser.add_argument("--password", default=None, help="Senha de login do Muzpa")
     args = parser.parse_args(argv)
+    started_at = time.perf_counter()
 
     tracklist_path = Path(args.tracklist).resolve()
     # --output sobrescreve --downloads quando fornecido.
@@ -85,7 +87,7 @@ def run(argv: list[str] | None = None) -> None:
             tracks = missing_tracks(history)
             if not tracks:
                 print("Nenhuma faixa nao encontrada no historico para tentar novamente.")
-                write_results(logs_dir, [])
+                write_results(logs_dir, [], elapsed_seconds=time.perf_counter() - started_at)
                 log_written = True
                 return
         else:
@@ -124,7 +126,7 @@ def run(argv: list[str] | None = None) -> None:
             results = process_tracks(page, tracks, downloads_dir, history, force_download=args.force_download)
             save_history(history_path, history)
             # Salva log final da execucao.
-            write_results(logs_dir, results)
+            write_results(logs_dir, results, elapsed_seconds=time.perf_counter() - started_at)
             log_written = True
 
     except Exception as exc:
@@ -134,7 +136,7 @@ def run(argv: list[str] | None = None) -> None:
                 status="erro",
                 detail=f"Falha antes da conclusão: {exc}",
             )
-            write_results(logs_dir, [*results, error_result])
+            write_results(logs_dir, [*results, error_result], elapsed_seconds=time.perf_counter() - started_at)
             log_written = True
         raise
 

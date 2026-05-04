@@ -2,6 +2,7 @@
 import re
 import sys
 import ctypes
+import time
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -32,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from .cli import run as run_bot
 from .history import load_history
+from .report import format_duration
 from .utils import load_tracklist
 
 
@@ -827,6 +829,7 @@ class TrackHunterWindow(QMainWindow):
         self.run_counts = {"baixada": 0, "ja_baixada": 0, "nao_encontrada": 0, "erro": 0}
         self.current_track = ""
         self.current_track_index = 0
+        self.run_started_at: float | None = None
 
         self.logs_path = str(self.base_dir / "logs")
         self.history_path = str(self.base_dir / "state" / "track_history.json")
@@ -1435,6 +1438,7 @@ class TrackHunterWindow(QMainWindow):
             args.append("--retry-missing-only")
 
         self.output.clear()
+        self.run_started_at = time.perf_counter()
         self._reset_progress()
         self._reset_summary()
         self._refresh_history_summary()
@@ -1488,7 +1492,10 @@ class TrackHunterWindow(QMainWindow):
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
         self._refresh_history_summary()
+        elapsed = None if self.run_started_at is None else time.perf_counter() - self.run_started_at
         self._add_log_line(f"Processo finalizado. Código: {exit_code}")
+        self._add_log_line(f"Tempo de execução: {format_duration(elapsed)}")
+        self.run_started_at = None
 
 
 def main() -> None:
@@ -1503,4 +1510,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 

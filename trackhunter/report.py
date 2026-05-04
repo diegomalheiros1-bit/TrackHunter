@@ -4,7 +4,20 @@ from typing import List
 from .models import TrackResult
 
 
-def write_results(logs_dir, results: List[TrackResult]) -> None:
+def format_duration(seconds: float | None) -> str:
+    if seconds is None:
+        return "Nao informado"
+    total_seconds = max(0, int(round(seconds)))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}min {secs:02d}s"
+    if minutes:
+        return f"{minutes}min {secs:02d}s"
+    return f"{secs}s"
+
+
+def write_results(logs_dir, results: List[TrackResult], elapsed_seconds: float | None = None) -> None:
     """
     Gera apenas o log textual da execucao.
     Nao gera CSV/Excel.
@@ -40,6 +53,7 @@ def write_results(logs_dir, results: List[TrackResult]) -> None:
         # Cabecalho de resumo rapido.
         fh.write("Resumo da execucao\n")
         fh.write(f"Data/Hora: {datetime.now().isoformat()}\n")
+        fh.write(f"Tempo de execucao: {format_duration(elapsed_seconds)}\n")
         fh.write(f"Total: {total}\n")
         fh.write(f"Baixadas: {downloaded}\n")
         fh.write(f"Ja baixadas/ignoradas: {skipped}\n")
