@@ -514,7 +514,7 @@ class ToggleSwitch(QCheckBox):
         super().__init__(text, parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(30)
-        self.setMinimumWidth(max(138, self.fontMetrics().horizontalAdvance(text) + 78))
+        self.setMinimumWidth(max(112, self.fontMetrics().horizontalAdvance(text) + 64))
 
     def sizeHint(self) -> QSize:
         return QSize(self.minimumWidth(), 32)
@@ -874,13 +874,13 @@ class TrackHunterWindow(QMainWindow):
     def _option_with_tooltip(self, toggle: ToggleSwitch, tooltip: str) -> QWidget:
         toggle.setToolTip(tooltip)
         widget = QWidget()
-        option_width = toggle.minimumWidth() + 30
+        option_width = toggle.minimumWidth() + 22
         widget.setMinimumWidth(option_width)
         widget.setMaximumWidth(option_width)
         widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(3)
         layout.addWidget(toggle)
         layout.addWidget(self._tooltip_badge(tooltip))
         widget.setLayout(layout)
@@ -1129,8 +1129,8 @@ class TrackHunterWindow(QMainWindow):
             root.addWidget(title)
         else:
             title = QLabel()
-            title.setPixmap(logo_pixmap.scaledToHeight(62, Qt.TransformationMode.SmoothTransformation))
-            title.setFixedHeight(68)
+            title.setPixmap(logo_pixmap.scaledToHeight(70, Qt.TransformationMode.SmoothTransformation))
+            title.setFixedHeight(76)
             title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
             root.addWidget(title)
         subtitle = QLabel("Automação de busca e downloads de músicas no MUZPA")
@@ -1166,12 +1166,14 @@ class TrackHunterWindow(QMainWindow):
 
         files = Panel("Arquivos")
         self.files_panel = files
+        files.layout.setContentsMargins(16, 10, 16, 12)
+        files.layout.setSpacing(6)
         files_layout = QGridLayout()
         files_layout.setContentsMargins(0, 0, 0, 0)
         files_layout.setHorizontalSpacing(10)
-        files_layout.setVerticalSpacing(14)
-        files_layout.setRowMinimumHeight(0, 66)
-        files_layout.setRowMinimumHeight(1, 40)
+        files_layout.setVerticalSpacing(8)
+        files_layout.setRowMinimumHeight(0, 58)
+        files_layout.setRowMinimumHeight(1, 58)
 
         self.downloads_input = IconLineEdit("folder")
         self.downloads_input.setMaximumWidth(620)
@@ -1181,8 +1183,9 @@ class TrackHunterWindow(QMainWindow):
         tracklist_btn.setObjectName("BrowseButton")
         tracklist_btn.setFixedWidth(132)
         tracklist_btn.clicked.connect(self.open_tracklist_editor)
-        downloads_btn = QPushButton("Navegar")
+        downloads_btn = QPushButton("Selecionar")
         downloads_btn.setObjectName("BrowseButton")
+        downloads_btn.setFixedWidth(132)
         downloads_btn.clicked.connect(lambda: self._pick_directory(self.downloads_input))
 
         tracklist_stack = QVBoxLayout()
@@ -1197,9 +1200,15 @@ class TrackHunterWindow(QMainWindow):
         files_layout.addLayout(tracklist_stack, 0, 1)
         files_layout.addWidget(tracklist_btn, 0, 2, alignment=Qt.AlignmentFlag.AlignVCenter)
 
+        downloads_stack = QVBoxLayout()
+        downloads_stack.setContentsMargins(0, 0, 0, 0)
+        downloads_stack.setSpacing(4)
+        downloads_stack.addWidget(self.downloads_input, alignment=Qt.AlignmentFlag.AlignLeft)
+        downloads_stack.addWidget(self._help_label("Selecione a pasta onde deseja salvar as músicas baixadas."))
+
         files_layout.addWidget(self._field_label("Downloads"), 1, 0)
-        files_layout.addWidget(self.downloads_input, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        files_layout.addWidget(downloads_btn, 1, 2)
+        files_layout.addLayout(downloads_stack, 1, 1)
+        files_layout.addWidget(downloads_btn, 1, 2, alignment=Qt.AlignmentFlag.AlignTop)
         files_layout.setColumnStretch(1, 1)
         files.layout.addLayout(files_layout)
 
@@ -1208,15 +1217,15 @@ class TrackHunterWindow(QMainWindow):
         options.layout.setContentsMargins(16, 14, 16, 22)
         self.options_grid = QGridLayout()
         self.options_grid.setContentsMargins(0, 0, 0, 0)
-        self.options_grid.setHorizontalSpacing(28)
+        self.options_grid.setHorizontalSpacing(18)
         self.options_grid.setVerticalSpacing(8)
         self.options_grid.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
-        manual_login_tip = "Ative se o login automático falhar. Abre o navegador para você digitar as credenciais manualmente."
-        assisted_search_tip = "Interrompe o processo para você escolher a versão correta da música quando houver múltiplos resultados."
-        force_download_tip = "Ignora o histórico de downloads local e baixa a música mesmo que ela já exista na pasta de destino."
-        retry_missing_tip = "Processa apenas as faixas pendentes como não encontradas no histórico local. Ao final, o log também gera um TXT com as não encontradas da execução."
-        timeout_tip = "Tempo máximo de espera (em milissegundos) para a página de login carregar antes de cancelar a tentativa."
+        manual_login_tip = "Abre o navegador para login manual se o automático falhar."
+        assisted_search_tip = "Permite acompanhar a busca no navegador."
+        force_download_tip = "Baixa novamente, mesmo se já existir no histórico."
+        retry_missing_tip = "Busca apenas músicas pendentes como não encontradas."
+        timeout_tip = "Tempo máximo de espera para carregar o login."
 
         self.manual_login_check = ToggleSwitch("Login manual")
         self.headless_check = ToggleSwitch("Busca assistida")
@@ -1242,7 +1251,7 @@ class TrackHunterWindow(QMainWindow):
         self.timeout_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         timeout_layout = QHBoxLayout()
         timeout_layout.setContentsMargins(0, 0, 0, 0)
-        timeout_layout.setSpacing(6)
+        timeout_layout.setSpacing(4)
         timeout_label = self._field_label("Timeout Login")
         timeout_label.setToolTip(timeout_tip)
         timeout_layout.addWidget(timeout_label)
@@ -1468,6 +1477,7 @@ class TrackHunterWindow(QMainWindow):
             if search:
                 self.current_track_index = int(search.group(1))
                 self.current_track = search.group(3).strip()
+                self._add_log_line(line)
                 continue
 
             progress = re.search(r"Progresso:\s*(\d+)/(\d+)\s*\(([\d.]+)%\)", line)
@@ -1480,10 +1490,6 @@ class TrackHunterWindow(QMainWindow):
             status = re.search(r"Status:\s*([a-z_]+)", line)
             if status:
                 self._record_track_status(status.group(1))
-                continue
-
-            lowered = line.lower()
-            if any(marker in lowered for marker in ["download iniciado", "ignorada:"]):
                 continue
 
             self._add_log_line(line)
