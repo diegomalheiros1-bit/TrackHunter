@@ -4,7 +4,7 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from .history import downloaded_file_name, is_downloaded, is_file_downloaded, is_missing, mark_downloaded, mark_missing
 from .models import TrackResult
-from .search import best_download_candidate_for_track, find_search_input
+from .search import MIN_MATCH_SCORE, best_download_candidate_for_track, find_search_input
 from .utils import build_fallback_query, normalize_text
 
 
@@ -82,7 +82,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                 page.wait_for_timeout(2500)
 
                 row, score = best_download_candidate_for_track(page, track)
-                if row is None or score < 6:
+                if row is None or score < MIN_MATCH_SCORE:
                     last_detail = f"Sem correspondencia relevante ({attempt_name})"
                     continue
 
