@@ -487,8 +487,7 @@ class SummaryCard(QFrame):
         self.setObjectName("SummaryCard")
         self.color = color
         self.setMinimumHeight(66)
-        self.setMinimumWidth(98)
-        self.setMaximumWidth(138)
+        self.setFixedWidth(124)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
         layout = QVBoxLayout(self)
@@ -966,13 +965,11 @@ class TrackHunterWindow(QMainWindow):
         if compact:
             for index, card in enumerate(cards):
                 self.summary_grid.addWidget(card, 0, index, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.summary_grid.addWidget(self.history_summary_label, 1, 0, 1, 3, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.summary_grid.addWidget(self.history_btn, 1, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.summary_grid.addWidget(self.summary_history_widget, 1, 0, 1, 4, alignment=Qt.AlignmentFlag.AlignCenter)
         else:
             for index, card in enumerate(cards):
                 self.summary_grid.addWidget(card, 0, index, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.summary_grid.addWidget(self.history_summary_label, 0, 4, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.summary_grid.addWidget(self.history_btn, 0, 5, alignment=Qt.AlignmentFlag.AlignCenter)
+            self.summary_grid.addWidget(self.summary_history_widget, 0, 4, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
         self.summary_grid.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def _apply_responsive_layout(self) -> None:
@@ -1309,6 +1306,12 @@ class TrackHunterWindow(QMainWindow):
         self.history_btn.setObjectName("GhostButton")
         self.history_btn.setFixedWidth(136)
         self.history_btn.clicked.connect(self.open_history)
+        self.summary_history_widget = QWidget()
+        self.summary_history_layout = QHBoxLayout(self.summary_history_widget)
+        self.summary_history_layout.setContentsMargins(0, 0, 0, 0)
+        self.summary_history_layout.setSpacing(14)
+        self.summary_history_layout.addWidget(self.history_summary_label)
+        self.summary_history_layout.addWidget(self.history_btn)
         summary_panel.layout.addLayout(self.summary_grid)
 
         log_panel = Panel("Log de execução")
