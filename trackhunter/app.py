@@ -1,8 +1,9 @@
-﻿import os
+import os
 import re
 import sys
 import ctypes
 import time
+import threading
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -34,7 +35,7 @@ from PySide6.QtWidgets import (
 from .cli import run as run_bot
 from .history import load_history
 from .report import format_duration
-from .utils import load_tracklist
+from .utils import StopRequested, load_tracklist
 
 
 def asset_path(file_name: str) -> Path:
@@ -207,7 +208,8 @@ QListWidget {
     background: #0b1018;
     border: 1px solid #253041;
     border-radius: 10px;
-    padding: 6px;
+    font-size: 9pt;
+    padding: 4px;
     outline: 0;
 }
 QPlainTextEdit {
@@ -226,8 +228,8 @@ QPlainTextEdit:focus {
 }
 QListWidget::item {
     border-radius: 7px;
-    margin: 2px;
-    padding: 3px 8px;
+    margin: 1px;
+    padding: 2px 7px;
 }
 QListWidget::item:selected {
     background: #1e293b;
@@ -561,6 +563,10 @@ class BotWorker(QThread):
         self.args = args
         self.email = email
         self.password = password
+        self.stop_event = threading.Event()
+
+    def request_stop(self) -> None:
+        self.stop_event.set()
 
     def run(self) -> None:
         if self.email:
@@ -572,7 +578,9 @@ class BotWorker(QThread):
         exit_code = 0
         try:
             with redirect_stdout(stream), redirect_stderr(stream):
-                run_bot(self.args)
+                run_bot(self.args, stop_event=self.stop_event)
+        except StopRequested:
+            exit_code = 130
         except Exception as exc:
             exit_code = 1
             self.output.emit(f"\nErro: {exc}\n")
@@ -1100,6 +1108,7 @@ class TrackHunterWindow(QMainWindow):
         item.setData(Qt.ItemDataRole.UserRole, level)
         item.setForeground(QColor(color))
         item.setBackground(QColor(bg))
+        item.setSizeHint(QSize(0, 22))
         self.output.addItem(item)
         self.output.scrollToBottom()
 
@@ -1109,7 +1118,14 @@ class TrackHunterWindow(QMainWindow):
             return ("erro", "#fecaca", "#3b1118", self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxCritical))
         if "baixada" in lowered or "download iniciado" in lowered or "ok" in lowered or "finalizado" in lowered:
             return ("sucesso", "#bbf7d0", "#10291b", self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
-        if "ignorada" in lowered or "historico" in lowered or "nao encontrada" in lowered or "nenhuma faixa" in lowered:
+        if (
+            "ignorada" in lowered
+            or "historico" in lowered
+            or "nao encontrada" in lowered
+            or "nenhuma faixa" in lowered
+            or "parada solicitada" in lowered
+            or "interrompida" in lowered
+        ):
             return ("aviso", "#fed7aa", "#32210e", self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning))
         if "buscando" in lowered or "iniciando" in lowered or "login" in lowered or "credenciais" in lowered:
             return ("busca", "#bfdbfe", "#10233d", self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogContentsView))
@@ -1306,6 +1322,8 @@ class TrackHunterWindow(QMainWindow):
         self.output.setAlternatingRowColors(False)
         self.output.setMinimumHeight(70)
         self.output.setAutoScroll(True)
+        self.output.setSpacing(1)
+        self.output.setIconSize(QSize(16, 16))
         log_panel.layout.addWidget(self.output)
 
         progress_row = QHBoxLayout()
@@ -1469,7 +1487,9 @@ class TrackHunterWindow(QMainWindow):
     def stop_bot(self) -> None:
         if not self.worker or not self.worker.isRunning():
             return
-        self._add_log_line("Encerramento manual não suportado no momento. Aguarde a execução finalizar.")
+        self.worker.request_stop()
+        self.stop_btn.setEnabled(False)
+        self._add_log_line("Parada solicitada. Finalizando etapa atual com segurança...")
 
     def _append_output(self, text: str) -> None:
         for line in text.splitlines():

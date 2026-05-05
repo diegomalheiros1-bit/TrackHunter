@@ -13,13 +13,13 @@ from .download import process_tracks
 from .history import load_history, missing_tracks, save_history
 from .models import TrackResult
 from .report import write_results
-from .utils import ensure_dir, load_tracklist
+from .utils import StopRequested, ensure_dir, load_tracklist, raise_if_stopped, wait_for_url_or_stop
 
 # Tela base usada para login e inicio de processamento.
 DEFAULT_URL = "https://srv.muzpa.com/#/media/releases"
 
 
-def run(argv: list[str] | None = None) -> None:
+def run(argv: list[str] | None = None, stop_event=None) -> None:
     """
     Orquestrador principal:
     - le argumentos
@@ -77,6 +77,7 @@ def run(argv: list[str] | None = None) -> None:
     context = None
 
     try:
+        raise_if_stopped(stop_event)
         # Historico persistente: baixadas sao puladas; nao encontradas podem ser tentadas de novo.
         history = load_history(history_path)
         # Persiste limpeza de entradas obsoletas, por exemplo faixa em baixadas e nao_encontradas ao mesmo tempo.
@@ -100,41 +101,58 @@ def run(argv: list[str] | None = None) -> None:
 
         # Ciclo de vida Playwright: browser -> context -> page.
         with sync_playwright() as p:
+            raise_if_stopped(stop_event)
             browser = p.chromium.launch(headless=args.headless)
             context = browser.new_context(accept_downloads=True)
             page = context.new_page()
+            raise_if_stopped(stop_event)
 
             if args.manual_login:
                 # Fluxo manual: usuario autentica na janela.
                 page.goto(DEFAULT_URL, wait_until="domcontentloaded")
                 print("Login manual habilitado. Faca o login na janela e aguarde...")
                 try:
-                    page.wait_for_url("**/media/releases**", timeout=args.wait_login)
+                    wait_for_url_or_stop(page, "**/media/releases**", args.wait_login, stop_event)
+                except StopRequested:
+                    raise
                 except Exception:
                     print("Nao confirmou URL de releases no login manual; seguindo com tentativa de processamento.")
             else:
                 # Fluxo automatico: valida variaveis e chama modulo de autenticacao.
                 if not email or not password:
                     raise ValueError("Defina MUZPA_EMAIL e MUZPA_PASSWORD no ambiente, ou use --manual-login")
-                do_login(page, email, password, args.wait_login, DEFAULT_URL)
+                do_login(page, email, password, args.wait_login, DEFAULT_URL, stop_event=stop_event)
 
             # Garante inicio na pagina base antes da busca.
+            raise_if_stopped(stop_event)
             page.goto(DEFAULT_URL, wait_until="domcontentloaded")
             page.wait_for_timeout(2000)
+            raise_if_stopped(stop_event)
 
             # Processa a lista e retorna resultados estruturados.
-            results = process_tracks(page, tracks, downloads_dir, history, force_download=args.force_download)
+            results = process_tracks(page, tracks, downloads_dir, history, force_download=args.force_download, stop_event=stop_event)
             save_history(history_path, history)
             # Salva log final da execucao.
             write_results(logs_dir, results, elapsed_seconds=time.perf_counter() - started_at)
             log_written = True
 
+    except StopRequested as exc:
+        print("Execucao interrompida pelo usuario.")
+        if not log_written:
+            stop_result = TrackResult(
+                track="Execucao",
+                status="erro",
+                detail=str(exc),
+            )
+            write_results(logs_dir, [*results, stop_result], elapsed_seconds=time.perf_counter() - started_at)
+            log_written = True
+        raise
     except Exception as exc:
         if not log_written:
             error_result = TrackResult(
-                track="Execução",
+                track="Execucao",
                 status="erro",
-                detail=f"Falha antes da conclusão: {exc}",
+                detail=f"Falha antes da conclusao: {exc}",
             )
             write_results(logs_dir, [*results, error_result], elapsed_seconds=time.perf_counter() - started_at)
             log_written = True
@@ -160,3 +178,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

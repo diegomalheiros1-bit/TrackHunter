@@ -5,20 +5,21 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 from .history import downloaded_file_name, is_downloaded, is_file_downloaded, is_missing, mark_downloaded, mark_missing
 from .models import TrackResult
 from .search import MIN_MATCH_SCORE, best_download_candidate_for_track, find_search_input
-from .utils import build_fallback_query, normalize_text
+from .utils import StopRequested, build_fallback_query, normalize_text, raise_if_stopped
 
 
-def click_download(page: Page, candidate):
+def click_download(page: Page, candidate, stop_event=None):
     """
     Envolve o clique em um contexto expect_download para capturar o arquivo.
     Timeout curto evita que candidatos ruins segurem a execucao por muito tempo.
     """
+    raise_if_stopped(stop_event)
     with page.expect_download(timeout=5000) as dl_info:
         candidate.click(timeout=3000, force=True)
     return dl_info.value
 
 
-def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, force_download: bool = False) -> List[TrackResult]:
+def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, force_download: bool = False, stop_event=None) -> List[TrackResult]:
     """
     Processa a tracklist faixa a faixa.
     Fluxo por faixa:
@@ -38,6 +39,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
         print(f"    Status: {status} | Progresso: {current}/{total} ({percent:.1f}%)")
 
     for idx, track in enumerate(track_list, start=1):
+        raise_if_stopped(stop_event)
         print(f"[{idx}/{total}] Buscando: {track}")
         try:
             # Evita downloads repetidos entre execucoes diferentes, mas so pula
@@ -74,6 +76,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
             last_detail = "Sem correspondencia relevante"
 
             for attempt_name, query in attempts:
+                raise_if_stopped(stop_event)
                 # Digita consulta e dispara busca.
                 search_input.click()
                 search_input.fill("")
@@ -87,7 +90,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                     continue
 
                 try:
-                    download = click_download(page, row)
+                    download = click_download(page, row, stop_event=stop_event)
                 except PlaywrightTimeoutError:
                     # Se o clique nao dispara download, tratamos como ausencia de match util.
                     last_detail = f"Timeout aguardando download ({attempt_name})"
@@ -121,6 +124,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                 print(f"    Download iniciado: {file_name}")
                 print_progress(idx, "baixada")
                 page.wait_for_timeout(1200)
+                raise_if_stopped(stop_event)
                 downloaded = True
                 break
 
@@ -135,6 +139,8 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
             mark_missing(history, track, detail)
             results.append(TrackResult(track, "nao_encontrada", detail))
             print_progress(idx, "nao_encontrada")
+        except StopRequested:
+            raise
         except Exception as exc:
             # Qualquer erro inesperado e registrado para auditoria.
             results.append(TrackResult(track, "erro", f"Falha inesperada: {exc}"))

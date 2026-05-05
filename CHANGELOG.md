@@ -7,6 +7,8 @@
 - Editor de Tracklist dentro do software, com suporte a colar, editar e salvar musicas.
 - Suporte visual para buscar por nome da musica ou pelo formato `Artista - Titulo`.
 - Pacote Windows com `TrackHunter.exe` direto para o usuario abrir com dois cliques.
+- Botao `Parar` funcional para interromper uma execucao em andamento com seguranca.
+- Log de execucao mais compacto, listando as etapas conforme o processo roda.
 - Historico local em `state/track_history.json`.
 - Bloqueio automatico para evitar download duplicado de faixas ja baixadas.
 - Registro persistente de musicas nao encontradas, mantendo elas elegiveis para novas buscas.

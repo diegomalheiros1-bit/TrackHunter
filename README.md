@@ -148,6 +148,7 @@ Pela tela voce pode:
 - ligar/desligar login manual, busca assistida, baixar novamente e somente nao encontradas
 - acompanhar o log em tempo real
 - conferir resumo de baixadas, ignoradas, nao encontradas e erros
+- interromper uma execucao em andamento com o botao `Parar`
 
 ## Argumentos CLI
 
@@ -204,10 +205,13 @@ logs/log_execucao_YYYYMMDD_HHMMSS.txt
 O log e organizado em:
 
 - `Resumo da execucao`
+- `Tempo de execucao`
 - `Concluidas com sucesso`
 - `Ja baixadas / ignoradas`
 - `Nao encontradas`
 - `Erros`
+
+Na interface, o `Log de execucao` lista as etapas conforme o processo avanca, incluindo buscas, avisos, erros e status final de cada faixa.
 
 ## Arquivos Locais
 

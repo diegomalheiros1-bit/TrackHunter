@@ -1,9 +1,37 @@
 import re
+import time
 import unicodedata
 from pathlib import Path
 from typing import List
 
 from .models import TrackParts
+
+
+class StopRequested(Exception):
+    """Sinaliza que o usuario solicitou parar a execucao."""
+
+
+def raise_if_stopped(stop_event) -> None:
+    if stop_event is not None and stop_event.is_set():
+        raise StopRequested("Execucao interrompida pelo usuario")
+
+
+def wait_for_url_or_stop(page, url_pattern: str, timeout_ms: int, stop_event) -> None:
+    """
+    Aguarda uma URL, mas checa periodicamente se o usuario pediu parada.
+    Isso evita que o botao Parar fique preso em waits longos do Playwright.
+    """
+    deadline = time.perf_counter() + (timeout_ms / 1000)
+    last_error = None
+    while time.perf_counter() < deadline:
+        raise_if_stopped(stop_event)
+        remaining_ms = max(1, int((deadline - time.perf_counter()) * 1000))
+        try:
+            page.wait_for_url(url_pattern, timeout=min(1000, remaining_ms))
+            return
+        except Exception as exc:
+            last_error = exc
+    raise last_error or TimeoutError(f"Timeout aguardando URL: {url_pattern}")
 
 
 def normalize_text(value: str) -> str:

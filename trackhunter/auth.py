@@ -1,7 +1,9 @@
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
+from .utils import raise_if_stopped, wait_for_url_or_stop
 
-def do_login(page: Page, email: str, password: str, login_timeout_ms: int, default_url: str) -> None:
+
+def do_login(page: Page, email: str, password: str, login_timeout_ms: int, default_url: str, stop_event=None) -> None:
     """
     Executa login automatico no Muzpa:
     1) abre URL base
@@ -9,8 +11,10 @@ def do_login(page: Page, email: str, password: str, login_timeout_ms: int, defau
     3) envia formulario
     4) aguarda URL de releases
     """
+    raise_if_stopped(stop_event)
     page.goto(default_url, wait_until="domcontentloaded")
     page.wait_for_timeout(1500)
+    raise_if_stopped(stop_event)
 
     email_candidates = ["input[type='email']", "input[name='email']", "input[placeholder*='mail' i]"]
     pass_candidates = ["input[type='password']", "input[name='password']", "input[placeholder*='senha' i]"]
@@ -54,7 +58,8 @@ def do_login(page: Page, email: str, password: str, login_timeout_ms: int, defau
             pass_input.press("Enter")
 
     try:
-        page.wait_for_url("**/media/releases**", timeout=login_timeout_ms)
+        wait_for_url_or_stop(page, "**/media/releases**", login_timeout_ms, stop_event)
     except PlaywrightTimeoutError:
         # Se a navegacao nao confirmar, tenta voltar para pagina base.
+        raise_if_stopped(stop_event)
         page.goto(default_url, wait_until="domcontentloaded")
