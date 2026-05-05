@@ -1277,7 +1277,8 @@ class TrackHunterWindow(QMainWindow):
         options.layout.addLayout(self.options_grid)
 
         controls = QHBoxLayout()
-        controls.setSpacing(10)
+        controls.setContentsMargins(0, 0, 0, 0)
+        controls.setSpacing(12)
         self.start_btn = QPushButton("Iniciar")
         self.start_btn.setObjectName("StartButton")
         self.stop_btn = QPushButton("Parar")
@@ -1287,10 +1288,6 @@ class TrackHunterWindow(QMainWindow):
         self.stop_btn.clicked.connect(self.stop_bot)
         self.start_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
         self.stop_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaStop))
-        controls.addStretch(1)
-        controls.addWidget(self.start_btn)
-        controls.addWidget(self.stop_btn)
-
         summary_panel = Panel("Resumo")
         self.summary_panel = summary_panel
         summary_panel.layout.setContentsMargins(18, 14, 18, 14)
@@ -1316,7 +1313,7 @@ class TrackHunterWindow(QMainWindow):
 
         log_panel = Panel("Log de execução")
         self.log_panel = log_panel
-        log_panel.setFixedHeight(150)
+        log_panel.setFixedHeight(176)
         log_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.output = QListWidget()
         self.output.setAlternatingRowColors(False)
@@ -1326,19 +1323,18 @@ class TrackHunterWindow(QMainWindow):
         self.output.setIconSize(QSize(16, 16))
         log_panel.layout.addWidget(self.output)
 
-        progress_row = QHBoxLayout()
-        progress_row.setContentsMargins(0, 0, 0, 0)
-        progress_row.setSpacing(12)
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.progress_bar.setFixedHeight(20)
+        self.progress_bar.setFixedHeight(22)
         self.progress_text = QLabel("0/0 Faixas - 0.0%")
         self.progress_text.setObjectName("ProgressText")
         self.progress_text.setMinimumWidth(176)
         self.progress_text.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        progress_row.addWidget(self.progress_bar, 1)
-        progress_row.addWidget(self.progress_text)
+        controls.addWidget(self.progress_bar, 1)
+        controls.addWidget(self.progress_text)
+        controls.addWidget(self.start_btn)
+        controls.addWidget(self.stop_btn)
 
         dashboard_grid = QGridLayout()
         dashboard_grid.setContentsMargins(0, 0, 0, 0)
@@ -1355,7 +1351,6 @@ class TrackHunterWindow(QMainWindow):
 
         root.addLayout(dashboard_grid)
         root.addLayout(controls)
-        root.addLayout(progress_row)
         root.addWidget(log_panel)
         root.addStretch(1)
         self._apply_responsive_layout()
@@ -1536,5 +1531,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 
