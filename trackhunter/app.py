@@ -1329,10 +1329,12 @@ class TrackHunterWindow(QMainWindow):
         self.progress_bar.setFixedHeight(22)
         self.progress_text = QLabel("0/0 Faixas - 0.0%")
         self.progress_text.setObjectName("ProgressText")
-        self.progress_text.setMinimumWidth(176)
-        self.progress_text.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.progress_text.setMinimumWidth(126)
+        self.progress_text.setMaximumWidth(142)
+        self.progress_text.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         controls.addWidget(self.progress_bar, 1)
-        controls.addWidget(self.progress_text)
+        controls.addWidget(self.progress_text, 0)
+        controls.addSpacing(4)
         controls.addWidget(self.start_btn)
         controls.addWidget(self.stop_btn)
 
@@ -1531,4 +1533,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

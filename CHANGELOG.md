@@ -10,6 +10,7 @@
 - Botao `Parar` funcional para interromper uma execucao em andamento com seguranca.
 - Log de execucao mais compacto, listando as etapas conforme o processo roda.
 - Barra de progresso reposicionada ao lado dos botoes de acao para ampliar o log visual.
+- Barra de progresso expandida para preencher melhor o espaco antes do texto de percentual.
 - Historico local em `state/track_history.json`.
 - Bloqueio automatico para evitar download duplicado de faixas ja baixadas.
 - Registro persistente de musicas nao encontradas, mantendo elas elegiveis para novas buscas.
