@@ -152,12 +152,16 @@ Pela tela voce pode:
 
 ## Versao Definitiva (Release)
 
-A versao final aprovada desta interface e:
+A versao oficial de distribuicao e controlada por:
 
-- `release/TrackHunter-v2.0-ui-polish/TrackHunter.exe`
-- `release/TrackHunter-v2.0-ui-polish.zip`
+- `RELEASE_VERSION.txt`
 
-Essa e a build oficial para distribuicao nesta fase do projeto.
+Com isso, os artefatos finais sempre seguem o padrao:
+
+- `release/TrackHunter-<versao>/TrackHunter.exe`
+- `release/TrackHunter-<versao>.zip`
+
+Regra de trabalho: sempre que houver alteracao relevante de interface, fluxo ou empacotamento, atualize a versao antes de gerar nova release.
 
 ## Argumentos CLI
 

@@ -1,10 +1,32 @@
+param(
+    [string]$Version
+)
+
 $ErrorActionPreference = "Stop"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $distApp = Join-Path $root "dist\TrackHunter"
 $releaseRoot = Join-Path $root "release"
-$releaseDir = Join-Path $releaseRoot "TrackHunter-v2.0"
-$zipPath = Join-Path $releaseRoot "TrackHunter-v2.0.zip"
+$versionFile = Join-Path $root "RELEASE_VERSION.txt"
+
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    if (-not (Test-Path -LiteralPath $versionFile)) {
+        throw "Arquivo RELEASE_VERSION.txt nao encontrado. Crie o arquivo com a versao (ex: v2.0-ui-polish)."
+    }
+    $Version = (Get-Content -LiteralPath $versionFile -Raw).Trim()
+}
+
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    throw "Versao invalida. Defina em RELEASE_VERSION.txt ou passe -Version."
+}
+
+if ($Version -notmatch "^[A-Za-z0-9._-]+$") {
+    throw "Versao invalida '$Version'. Use apenas letras, numeros, ponto, underline e hifen."
+}
+
+$releaseName = "TrackHunter-$Version"
+$releaseDir = Join-Path $releaseRoot $releaseName
+$zipPath = Join-Path $releaseRoot "$releaseName.zip"
 
 if (-not (Test-Path -LiteralPath (Join-Path $distApp "TrackHunter.exe"))) {
     throw "Executavel nao encontrado. Rode o build antes: pyinstaller --noconfirm --clean TrackHunterApp.spec"
@@ -38,8 +60,8 @@ New-Item -ItemType Directory -Force -Path `
 
 Copy-Item -Path (Join-Path $root "tracklist.txt") -Destination (Join-Path $releaseDir "state\tracklist.txt") -Force
 
-@"
-TrackHunter v2.0
+@" 
+TrackHunter $Version
 ================
 
 Como abrir
@@ -66,7 +88,7 @@ Clique em "Mais informacoes" e depois em "Executar assim mesmo", caso voce confi
 
 Push-Location $releaseRoot
 try {
-    & tar.exe -a -c -f $zipPath "TrackHunter-v2.0"
+    & tar.exe -a -c -f $zipPath $releaseName
     if ($LASTEXITCODE -ne 0) {
         throw "Falha ao criar ZIP. Codigo tar: $LASTEXITCODE"
     }
@@ -75,5 +97,6 @@ finally {
     Pop-Location
 }
 
+Write-Host "Versao da release: $Version"
 Write-Host "Release pronta em: $releaseDir"
 Write-Host "ZIP pronto em: $zipPath"

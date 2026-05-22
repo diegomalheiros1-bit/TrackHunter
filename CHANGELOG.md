@@ -18,9 +18,11 @@
 - Opcao `--force-download` para ignorar o historico quando necessario.
 - Opcao `--retry-missing-only` para buscar somente faixas nao encontradas anteriormente.
 - Timeout padrao de login ajustado para `30000 ms` na interface.
+- Versionamento de release centralizado em `RELEASE_VERSION.txt`.
 
 ### Changed
 - A tracklist da interface agora e gerenciada em `state/tracklist.txt`, sem exigir importacao manual de arquivo.
+- Script `scripts/create_release.ps1` atualizado para gerar pasta e ZIP com base na versao atual.
 
 ## v1.0.0 - 2026-04-28
 
