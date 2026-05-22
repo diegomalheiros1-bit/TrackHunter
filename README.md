@@ -150,6 +150,15 @@ Pela tela voce pode:
 - conferir resumo de baixadas, ignoradas, nao encontradas e erros
 - interromper uma execucao em andamento com o botao `Parar`
 
+## Versao Definitiva (Release)
+
+A versao final aprovada desta interface e:
+
+- `release/TrackHunter-v2.0-ui-polish/TrackHunter.exe`
+- `release/TrackHunter-v2.0-ui-polish.zip`
+
+Essa e a build oficial para distribuicao nesta fase do projeto.
+
 ## Argumentos CLI
 
 - `--tracklist`: caminho do arquivo `.txt` com as musicas.

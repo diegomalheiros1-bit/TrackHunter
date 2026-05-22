@@ -1,13 +1,13 @@
-﻿# TrackHunter Executavel
+# TrackHunter Executavel
 
-Use o ZIP em `release/TrackHunter-v2.0.zip` para distribuir o programa para usuarios finais.
+Use o ZIP em `release/TrackHunter-v2.0-ui-polish.zip` para distribuir o programa para usuarios finais.
 
 ## Opcoes
 
-- `release/TrackHunter-v2.0.zip`
+- `release/TrackHunter-v2.0-ui-polish.zip`
   - Pacote pronto para enviar ao usuario.
 
-- `release/TrackHunter-v2.0/TrackHunter.exe`
+- `release/TrackHunter-v2.0-ui-polish/TrackHunter.exe`
   - Executavel principal. O usuario deve clicar duas vezes nele para abrir o programa.
 
 - `scripts/`
@@ -23,7 +23,7 @@ Use o ZIP em `release/TrackHunter-v2.0.zip` para distribuir o programa para usua
 
 ## Estrutura esperada
 
-Nao mova o executavel sozinho. Para distribuir, envie o arquivo `release/TrackHunter-v2.0.zip`.
+Nao mova o executavel sozinho. Para distribuir, envie o arquivo `release/TrackHunter-v2.0-ui-polish.zip`.
 Depois de extrair o ZIP, o usuario deve abrir `TrackHunter.exe`.
 
 ## Gerar um novo pacote
