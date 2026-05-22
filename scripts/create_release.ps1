@@ -11,7 +11,7 @@ $versionFile = Join-Path $root "RELEASE_VERSION.txt"
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
     if (-not (Test-Path -LiteralPath $versionFile)) {
-        throw "Arquivo RELEASE_VERSION.txt nao encontrado. Crie o arquivo com a versao (ex: v2.0-ui-polish)."
+        throw "Arquivo RELEASE_VERSION.txt nao encontrado. Crie o arquivo com a versao (ex: v2.1.0)."
     }
     $Version = (Get-Content -LiteralPath $versionFile -Raw).Trim()
 }
