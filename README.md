@@ -155,6 +155,7 @@ Pela tela voce pode:
 A versao oficial de distribuicao e controlada por:
 
 - `RELEASE_VERSION.txt`
+- Versao atual: `v2.0.1`
 
 Com isso, os artefatos finais sempre seguem o padrao:
 

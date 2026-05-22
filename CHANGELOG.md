@@ -23,6 +23,7 @@
 ### Changed
 - A tracklist da interface agora e gerenciada em `state/tracklist.txt`, sem exigir importacao manual de arquivo.
 - Script `scripts/create_release.ps1` atualizado para gerar pasta e ZIP com base na versao atual.
+- Versao atual de release definida para `v2.0.1` em `RELEASE_VERSION.txt`.
 
 ## v1.0.0 - 2026-04-28
 
