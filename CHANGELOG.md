@@ -19,11 +19,12 @@
 - Opcao `--retry-missing-only` para buscar somente faixas nao encontradas anteriormente.
 - Timeout padrao de login ajustado para `30000 ms` na interface.
 - Versionamento de release centralizado em `RELEASE_VERSION.txt`.
+- Feedback visual de hover/pressed nos botoes `Tracklist` e `Selecionar` (`BrowseButton`), alinhando com os demais botoes da interface.
 
 ### Changed
 - A tracklist da interface agora e gerenciada em `state/tracklist.txt`, sem exigir importacao manual de arquivo.
 - Script `scripts/create_release.ps1` atualizado para gerar pasta e ZIP com base na versao atual.
-- Versao atual de release definida para `v2.0.1` em `RELEASE_VERSION.txt`.
+- Versao atual de release definida para `v2.0.2` em `RELEASE_VERSION.txt`.
 
 ## v1.0.0 - 2026-04-28
 

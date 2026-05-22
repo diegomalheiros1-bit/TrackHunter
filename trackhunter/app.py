@@ -192,7 +192,18 @@ QPushButton#StopButton:disabled {
 }
 QPushButton#BrowseButton {
     background: #1f2a3a;
+    border: 1px solid #2b3a50;
     color: #bfdbfe;
+}
+QPushButton#BrowseButton:hover {
+    background: #2b3f5a;
+    border: 1px solid #4c6a8f;
+    color: #eff6ff;
+}
+QPushButton#BrowseButton:pressed {
+    background: #1f2f45;
+    border: 1px solid #3b82f6;
+    color: #dbeafe;
 }
 QPushButton#GhostButton {
     background: transparent;

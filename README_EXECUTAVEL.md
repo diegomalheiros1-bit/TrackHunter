@@ -2,7 +2,7 @@
 
 Use o ZIP da versao definida em `RELEASE_VERSION.txt` para distribuir o programa para usuarios finais.
 
-Versao atual definida: `v2.0.1`.
+Versao atual definida: `v2.0.2`.
 
 ## Opcoes
 
