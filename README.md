@@ -161,7 +161,7 @@ A versao oficial de distribuicao e controlada por:
 
 - `RELEASE_VERSION.txt`
 - Versao em desenvolvimento: `v2.1`
-- Ultima release gerada: `v2.0.3`
+- Ultima release gerada: `v2.1`
 
 Com isso, os artefatos finais sempre seguem o padrao:
 
@@ -170,8 +170,8 @@ Com isso, os artefatos finais sempre seguem o padrao:
 
 Release atual gerada:
 
-- `release/TrackHunter-v2.0.3/TrackHunter.exe`
-- `release/TrackHunter-v2.0.3.zip`
+- `release/TrackHunter-v2.1/TrackHunter.exe`
+- `release/TrackHunter-v2.1.zip`
 
 Executavel local de desenvolvimento:
 

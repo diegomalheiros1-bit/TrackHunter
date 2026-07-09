@@ -4,9 +4,9 @@ Use o ZIP da ultima release final para distribuir o programa para usuarios finai
 
 Versao em desenvolvimento definida: `v2.1`.
 
-Ultima release final gerada: `v2.0.3`.
+Ultima release final gerada: `v2.1`.
 
-A versao `v2.1` esta salva localmente e compilada em `dist/TrackHunter`, mas ainda nao foi empacotada como release final em ZIP.
+A versao `v2.1` esta salva localmente, compilada em `dist/TrackHunter` e empacotada em `release/TrackHunter-v2.1.zip`.
 
 ## Opcoes
 
@@ -16,7 +16,7 @@ A versao `v2.1` esta salva localmente e compilada em `dist/TrackHunter`, mas ain
 - `release/TrackHunter-<versao>/TrackHunter.exe`
   - Executavel principal. O usuario deve clicar duas vezes nele para abrir o programa.
 
-- `release/TrackHunter-v2.0.3.zip`
+- `release/TrackHunter-v2.1.zip`
   - ZIP atual gerado para distribuicao.
 
 - `dist/TrackHunter/TrackHunter.exe`
