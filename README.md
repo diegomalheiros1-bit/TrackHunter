@@ -1,6 +1,6 @@
 # TrackHunter
 
-TrackHunter e uma automacao em Python + Playwright para buscar faixas no Muzpa, baixar arquivos MP3 e manter um historico local para evitar downloads duplicados.
+TrackHunter e uma automacao em Python + Playwright para buscar faixas no Muzpa, baixar arquivos MP3 ou AIFF e manter um historico local para evitar downloads duplicados.
 
 ## O Que Ele Faz
 
@@ -10,7 +10,7 @@ O TrackHunter automatiza este fluxo:
 2. Faz login automatico ou manual.
 3. Usa uma tracklist flexivel, editavel pela interface ou por arquivo no modo CLI.
 4. Busca uma musica por vez.
-5. Clica no melhor candidato de MP3 encontrado nos resultados.
+5. Clica no melhor candidato do formato escolhido, `MP3` ou `AIFF`, encontrado nos resultados.
 6. Salva os arquivos baixados em `downloads/`.
 7. Gera um log legivel em `logs/`.
 8. Mantem historico local em `state/track_history.json`.
@@ -40,7 +40,7 @@ TrackHunter/
 |- assets/           # logo e icone do aplicativo
 |- requirements.txt
 |- tracklist.txt     # lista exemplo usada para popular o pacote inicial
-|- downloads/        # arquivos MP3 baixados
+|- downloads/        # arquivos baixados
 |- logs/             # logs de execucao (.txt)
 `- state/            # historico local e tracklist salva
 ```
@@ -126,6 +126,7 @@ python -m trackhunter.cli --tracklist .\tracklist.txt --downloads .\downloads --
 ## Interface Grafica
 
 Agora o projeto inclui uma interface desktop em `trackhunter/app.py`, para executar sem usar terminal.
+A janela principal se adapta a diferentes resolucoes, incluindo notebooks, compactando logo, margens, espacamentos e area de log sem usar rolagem na tela inicial.
 
 Instale as dependencias:
 
@@ -143,34 +144,47 @@ python -m trackhunter.app
 Pela tela voce pode:
 
 - informar usuario e senha do MUZPA
+- escolher o formato de download em `Opcoes`: `Download MP3` ou `Download AIFF`
 - abrir o editor Tracklist para adicionar, editar e salvar musicas sem mexer em arquivo manualmente
 - escolher a pasta de downloads e abrir arquivos gerados
 - ligar/desligar login manual, busca assistida, baixar novamente e somente nao encontradas
 - acompanhar o log em tempo real
 - conferir resumo de baixadas, ignoradas, nao encontradas e erros
 - interromper uma execucao em andamento com o botao `Parar`
+- usar a interface em diferentes resolucoes com layout responsivo, mantendo os quatro quadros principais alinhados
 
-## Versao Definitiva (Release)
+## Versao e Release
 
 A versao oficial de distribuicao e controlada por:
 
 - `RELEASE_VERSION.txt`
-- Versao atual: `v2.0.2`
+- Versao em desenvolvimento: `v2.0.5`
+- Ultima release gerada: `v2.0.3`
 
 Com isso, os artefatos finais sempre seguem o padrao:
 
 - `release/TrackHunter-<versao>/TrackHunter.exe`
 - `release/TrackHunter-<versao>.zip`
 
+Release atual gerada:
+
+- `release/TrackHunter-v2.0.3/TrackHunter.exe`
+- `release/TrackHunter-v2.0.3.zip`
+
+Executavel local de desenvolvimento:
+
+- `dist/TrackHunter/TrackHunter.exe`
+
 Regra de trabalho: sempre que houver alteracao relevante de interface, fluxo ou empacotamento, atualize a versao antes de gerar nova release.
 
 ## Argumentos CLI
 
 - `--tracklist`: caminho do arquivo `.txt` com as musicas.
-- `--downloads`: pasta onde os MP3 serao salvos.
+- `--downloads`: pasta onde os arquivos baixados serao salvos.
 - `--logs`: pasta onde os logs de execucao serao salvos.
 - `--history`: arquivo JSON usado como historico local.
 - `--output`: alias legado para a pasta de downloads.
+- `--download-format`: formato desejado para download (`mp3` ou `aiff`).
 - `--headless`: executa sem interface grafica.
 - `--wait-login`: timeout do login em milissegundos.
 - `--manual-login`: desativa preenchimento automatico de credenciais.
@@ -191,12 +205,14 @@ Esse historico serve para:
 - lembrar musicas que nao foram encontradas
 - tentar musicas nao encontradas em execucoes futuras
 - remover uma musica das pendencias quando ela for baixada
+- separar downloads por formato, permitindo baixar a mesma faixa em `MP3` e depois em `AIFF`
 
 Comportamentos importantes:
 
-- Uma faixa so e ignorada quando esta no historico e o MP3 ainda existe em `downloads/`.
-- Se o MP3 foi apagado de `downloads/`, o TrackHunter baixa novamente.
+- Uma faixa so e ignorada quando esta no historico para o formato selecionado e o arquivo ainda existe em `downloads/`.
+- Se o arquivo foi apagado de `downloads/`, o TrackHunter baixa novamente.
 - Musicas nao encontradas continuam elegiveis para buscas futuras.
+- O modo `Somente nao encontradas` respeita o formato selecionado: pendencias de `MP3` nao sao misturadas com pendencias de `AIFF`.
 - `--force-download` ignora o historico.
 
 ## Estrategia de Busca
@@ -206,7 +222,9 @@ Para cada faixa, o TrackHunter tenta:
 1. Busca completa usando o texto salvo na tracklist.
 2. Busca alternativa usando `titulo + versao/remix`, sem artista.
 
-Ele prioriza botoes MP3, usando ZIP/Download como fallback quando necessario.
+Ele prioriza somente botoes do formato escolhido. Para `MP3`, procura botoes `MP3`; para `AIFF`, alterna o Muzpa para `LOSSLESS` e procura botoes `AIFF`. O download automatico nao usa `ZIP/Download` como fallback.
+
+Antes de clicar, o resultado precisa bater o titulo em ordem, considerando tambem palavras curtas como `me`, `you`, `it`, `on` e `up`. Quando a tracklist informa artista e versao/remix, esses dados tambem entram na validacao para reduzir falso positivo.
 
 ## Formato do Log
 

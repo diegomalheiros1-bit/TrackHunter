@@ -1,6 +1,43 @@
 # Changelog
 
-## Unreleased
+## v2.0.5 - Em desenvolvimento
+
+### Changed
+- Interface principal refinada para manter os quatro quadros (`Autenticacao`, `Opcoes`, `Arquivos` e `Resumo`) alinhados em diferentes resolucoes.
+- Titulos dos quadros padronizados com o mesmo recuo interno para melhorar a consistencia visual.
+- Painel `Opcoes` reorganizado com dois toggles por linha e linha final dedicada a `Timeout Login` e `Arquivos`.
+- Linha de progresso compactada, mantendo barra, percentual e botoes de acao alinhados.
+- Botoes `Iniciar` e `Parar` reduzidos proporcionalmente para melhorar o equilibrio visual.
+- Quadros `Arquivos` e `Resumo` ajustados para ganhar altura sem deslocar os campos internos.
+- Resumo de historico alinhado a esquerda com borda visual, mantendo o botao `Ver historico` a direita.
+- Regras responsivas revisadas para evitar cortes, sobreposicoes e excesso de espacos vazios em telas de notebook e monitores maiores.
+- Versao local em desenvolvimento marcada como `v2.0.5`.
+
+### Tested
+- Validado layout principal em `1916x1028`, `1452x993`, `1366x768`, `1280x720` e `1180x690`.
+- Validado alinhamento dos titulos dos quadros com offset interno padronizado.
+
+## v2.0.4 - Em desenvolvimento
+
+### Added
+- Seletor de formato na tela principal para escolher downloads em `MP3` ou `AIFF`.
+- Argumento CLI `--download-format` com opcoes `mp3` e `aiff`.
+- Alternancia automatica para modo `LOSSLESS` no Muzpa quando o formato escolhido for `AIFF`.
+
+### Changed
+- Download automatico agora aceita somente o botao do formato escolhido, removendo fallback para `ZIP`/`Download`.
+- Versao local em desenvolvimento marcada como `v2.0.4`.
+- Matching de resultados reforcado para considerar a frase completa do titulo, incluindo palavras curtas, e respeitar versao/remix quando informado.
+- Historico e modo `Somente nao encontradas` separados por formato de download.
+- Executavel local atualizado em `dist/TrackHunter`, sem gerar release final em ZIP.
+- Controles de formato movidos para `Opcoes` como toggles `Download MP3` e `Download AIFF`, com selecao exclusiva.
+- Linha de `Timeout Login` e `Arquivos` ajustada para evitar sobreposicao no painel `Opcoes`.
+
+### Tested
+- Teste real com `state/tracklist.txt` em modo `AIFF`: 9 baixadas, 11 nao encontradas, 0 ZIP e 0 erros.
+- Validado que falso positivo conhecido passou a ser marcado como `nao encontrada` em vez de baixar arquivo incorreto.
+
+## v2.0.3 - 2026-07-02
 
 ### Added
 - Interface desktop moderna com tema escuro, logo e icone do aplicativo.
@@ -22,9 +59,13 @@
 - Feedback visual de hover/pressed nos botoes `Tracklist` e `Selecionar` (`BrowseButton`), alinhando com os demais botoes da interface.
 
 ### Changed
+- Interface principal ajustada para se adaptar melhor a telas de notebook sem depender de rolagem na tela inicial.
+- Tamanho inicial da janela agora considera a area disponivel do monitor.
+- Layout reduz logo, margens, espacamentos e area de log automaticamente em telas mais baixas.
+- Tema escuro original preservado nos ajustes de responsividade.
 - A tracklist da interface agora e gerenciada em `state/tracklist.txt`, sem exigir importacao manual de arquivo.
 - Script `scripts/create_release.ps1` atualizado para gerar pasta e ZIP com base na versao atual.
-- Versao atual de release definida para `v2.0.2` em `RELEASE_VERSION.txt`.
+- Versao atual de release definida para `v2.0.3` em `RELEASE_VERSION.txt`.
 
 ## v1.0.0 - 2026-04-28
 

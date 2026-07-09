@@ -57,6 +57,8 @@ def run(argv: list[str] | None = None, stop_event=None) -> None:
     parser.add_argument("--force-download", action="store_true", help="Ignora historico e baixa novamente")
     # Processa somente faixas que ficaram como nao encontradas em execucoes anteriores.
     parser.add_argument("--retry-missing-only", action="store_true", help="Busca somente faixas nao encontradas no historico")
+    # Formato de arquivo desejado.
+    parser.add_argument("--download-format", choices=["mp3", "aiff"], default="mp3", help="Formato de download desejado")
     # Credenciais opcionais por argumento (prioridade sobre variaveis de ambiente).
     parser.add_argument("--email", default=None, help="Email de login do Muzpa")
     parser.add_argument("--password", default=None, help="Senha de login do Muzpa")
@@ -85,7 +87,7 @@ def run(argv: list[str] | None = None, stop_event=None) -> None:
 
         if args.retry_missing_only:
             # Neste modo, a fonte de faixas e o historico, nao a tracklist.
-            tracks = missing_tracks(history)
+            tracks = missing_tracks(history, args.download_format)
             if not tracks:
                 print("Nenhuma faixa nao encontrada no historico para tentar novamente.")
                 write_results(logs_dir, [], elapsed_seconds=time.perf_counter() - started_at)
@@ -130,7 +132,15 @@ def run(argv: list[str] | None = None, stop_event=None) -> None:
             raise_if_stopped(stop_event)
 
             # Processa a lista e retorna resultados estruturados.
-            results = process_tracks(page, tracks, downloads_dir, history, force_download=args.force_download, stop_event=stop_event)
+            results = process_tracks(
+                page,
+                tracks,
+                downloads_dir,
+                history,
+                force_download=args.force_download,
+                download_format=args.download_format,
+                stop_event=stop_event,
+            )
             save_history(history_path, history)
             # Salva log final da execucao.
             write_results(logs_dir, results, elapsed_seconds=time.perf_counter() - started_at)

@@ -19,7 +19,44 @@ def click_download(page: Page, candidate, stop_event=None):
     return dl_info.value
 
 
-def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, force_download: bool = False, stop_event=None) -> List[TrackResult]:
+def select_site_download_mode(page: Page, download_format: str, stop_event=None) -> None:
+    """
+    Alterna o modo global do Muzpa quando o site expõe o seletor MP3/LOSSLESS.
+    AIFF aparece dentro do modo LOSSLESS; MP3 usa o modo MP3.
+    """
+    raise_if_stopped(stop_event)
+    label = "LOSSLESS" if download_format == "aiff" else "MP3"
+    selectors = [
+        f"ms-layout-topbar a:has-text('{label}')",
+        f"ms-layout-topbar button:has-text('{label}')",
+        f"ms-layout-topbar span:has-text('{label}')",
+        f".topbar a:has-text('{label}')",
+        f".topbar button:has-text('{label}')",
+    ]
+
+    for selector in selectors:
+        locator = page.locator(selector)
+        count = min(locator.count(), 5)
+        for idx in range(count):
+            candidate = locator.nth(idx)
+            try:
+                if candidate.is_visible() and candidate.is_enabled():
+                    candidate.click(timeout=1500, force=True)
+                    page.wait_for_timeout(800)
+                    return
+            except Exception:
+                continue
+
+
+def process_tracks(
+    page: Page,
+    tracks: Iterable[str],
+    downloads_dir,
+    history,
+    force_download: bool = False,
+    download_format: str = "mp3",
+    stop_event=None,
+) -> List[TrackResult]:
     """
     Processa a tracklist faixa a faixa.
     Fluxo por faixa:
@@ -32,6 +69,8 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
     results: List[TrackResult] = []
     track_list = list(tracks)
     total = len(track_list)
+    normalized_format = "aiff" if str(download_format).lower() == "aiff" else "mp3"
+    select_site_download_mode(page, normalized_format, stop_event=stop_event)
 
     def print_progress(current: int, status: str) -> None:
         """Mostra progresso simples no terminal apos cada faixa processada."""
@@ -44,11 +83,11 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
         try:
             # Evita downloads repetidos entre execucoes diferentes, mas so pula
             # quando o arquivo registrado ainda existe fisicamente em downloads/.
-            if not force_download and is_downloaded(history, track):
-                known_file = downloaded_file_name(history, track)
+            if not force_download and is_downloaded(history, track, normalized_format):
+                known_file = downloaded_file_name(history, track, normalized_format)
                 if known_file and (downloads_dir / known_file).exists():
-                    if is_missing(history, track):
-                        mark_downloaded(history, track, known_file)
+                    if is_missing(history, track, normalized_format):
+                        mark_downloaded(history, track, known_file, normalized_format)
                         results.append(TrackResult(track, "baixada", "Resolvida: faixa pendente ja existia no historico", file_name=known_file))
                         print("    Resolvida: pendencia ja estava baixada no historico")
                         print_progress(idx, "baixada")
@@ -84,7 +123,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                 search_input.press("Enter")
                 page.wait_for_timeout(2500)
 
-                row, score = best_download_candidate_for_track(page, track)
+                row, score = best_download_candidate_for_track(page, track, normalized_format)
                 if row is None or score < MIN_MATCH_SCORE:
                     last_detail = f"Sem correspondencia relevante ({attempt_name})"
                     continue
@@ -103,8 +142,8 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                 file_name = download.suggested_filename or ""
                 if file_name and not force_download and is_file_downloaded(history, file_name) and (downloads_dir / file_name).exists():
                     # Tambem associa esta linha da tracklist ao arquivo conhecido.
-                    was_missing = is_missing(history, track)
-                    mark_downloaded(history, track, file_name)
+                    was_missing = is_missing(history, track, normalized_format)
+                    mark_downloaded(history, track, file_name, normalized_format)
                     if was_missing:
                         results.append(TrackResult(track, "baixada", "Resolvida: arquivo ja existia no historico", file_name=file_name))
                         print(f"    Resolvida: arquivo ja baixado ({file_name})")
@@ -119,7 +158,7 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                 # Persistencia fisica na pasta downloads.
                 target = downloads_dir / file_name if file_name else downloads_dir / f"download_{idx}.bin"
                 download.save_as(target)
-                mark_downloaded(history, track, file_name)
+                mark_downloaded(history, track, file_name, normalized_format)
                 results.append(TrackResult(track, "baixada", f"OK ({attempt_name})", file_name=file_name))
                 print(f"    Download iniciado: {file_name}")
                 print_progress(idx, "baixada")
@@ -129,14 +168,14 @@ def process_tracks(page: Page, tracks: Iterable[str], downloads_dir, history, fo
                 break
 
             if not downloaded:
-                mark_missing(history, track, last_detail)
+                mark_missing(history, track, last_detail, normalized_format)
                 results.append(TrackResult(track, "nao_encontrada", last_detail))
                 print_progress(idx, "nao_encontrada")
         except PlaywrightTimeoutError:
             # Timeouts de busca/download costumam significar que o site nao retornou
             # um resultado baixavel para essa faixa dentro do tempo esperado.
             detail = "Timeout durante busca/download"
-            mark_missing(history, track, detail)
+            mark_missing(history, track, detail, normalized_format)
             results.append(TrackResult(track, "nao_encontrada", detail))
             print_progress(idx, "nao_encontrada")
         except StopRequested:

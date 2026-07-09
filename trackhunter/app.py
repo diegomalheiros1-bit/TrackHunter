@@ -8,7 +8,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QThread, Signal, QUrl
-from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPalette, QPen, QPixmap
+from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QIcon, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -168,8 +168,8 @@ QPushButton#StartButton {
     background: #2563eb;
     border: 1px solid #3b82f6;
     font-size: 11pt;
-    min-width: 104px;
-    min-height: 44px;
+    min-width: 94px;
+    min-height: 32px;
 }
 QPushButton#StartButton:hover {
     background: #1d4ed8;
@@ -179,8 +179,8 @@ QPushButton#StopButton {
     border: 1px solid #ef4444;
     color: #ffffff;
     font-size: 11pt;
-    min-width: 104px;
-    min-height: 44px;
+    min-width: 94px;
+    min-height: 32px;
 }
 QPushButton#StopButton:hover {
     background: #b91c1c;
@@ -260,7 +260,11 @@ QLabel#SummaryTitle {
     font-size: 8.5pt;
 }
 QLabel#HistorySummary {
+    background: #0f141d;
+    border: 1px solid #253041;
+    border-radius: 8px;
     color: #94a3b8;
+    padding: 7px 12px;
 }
 QLabel#TooltipBadge {
     background: #253041;
@@ -283,15 +287,15 @@ QToolTip {
 QProgressBar {
     background: #111827;
     border: 1px solid #253041;
-    border-radius: 9px;
+    border-radius: 8px;
     color: transparent;
-    min-height: 18px;
-    max-height: 18px;
+    min-height: 32px;
+    max-height: 32px;
     text-align: center;
 }
 QProgressBar::chunk {
     background: #22c55e;
-    border-radius: 9px;
+    border-radius: 8px;
 }
 QCheckBox {
     color: #dbeafe;
@@ -360,6 +364,9 @@ class MillisecondsStepper(QFrame):
         bounded = max(self.minimum, min(self.maximum, value))
         self.input.setText(f"{bounded} ms")
         self.input.setCursorPosition(0)
+
+    def sizeHint(self) -> QSize:
+        return QSize(142, 40)
 
     def step_by(self, delta: int) -> None:
         self.setValue(self.value() + delta)
@@ -486,10 +493,13 @@ class Panel(QFrame):
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(16, 14, 16, 14)
         self.layout.setSpacing(10)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        title_label = QLabel(title)
-        title_label.setObjectName("SectionTitle")
-        self.layout.addWidget(title_label)
+        self.title_label = QLabel(title)
+        self.title_label.setObjectName("SectionTitle")
+        self.title_label.setFixedHeight(24)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.layout.addWidget(self.title_label, 0, Qt.AlignmentFlag.AlignLeft)
 
 
 class SummaryCard(QFrame):
@@ -512,7 +522,9 @@ class SummaryCard(QFrame):
 
         title_label = QLabel(title)
         title_label.setObjectName("SummaryTitle")
-        title_label.setFixedHeight(20)
+        title_label.setFixedHeight(22)
+        title_label.setWordWrap(True)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         layout.addWidget(self.value_label)
         layout.addWidget(title_label)
@@ -836,10 +848,9 @@ class HistoryDialog(QDialog):
 class TrackHunterWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("TrackHunter v2.0")
+        self.setWindowTitle("TrackHunter v2.0.5")
         self.setWindowIcon(QIcon(str(asset_path("app_icon.png"))))
-        self.resize(1180, 820)
-        self.setMinimumSize(980, 800)
+        self.setMinimumSize(1180, 680)
 
         self.base_dir = self._resolve_base_dir()
         self.worker: BotWorker | None = None
@@ -854,8 +865,61 @@ class TrackHunterWindow(QMainWindow):
         self.tracklist_path = str(self.base_dir / "state" / "tracklist.txt")
 
         self._build_ui()
+        self._resize_to_available_screen()
         self._set_defaults()
         self._load_saved_credentials()
+
+    def _resize_to_available_screen(self) -> None:
+        screen = QGuiApplication.primaryScreen()
+        if not screen:
+            self.resize(1080, 720)
+            return
+
+        available = screen.availableGeometry()
+        target_width = min(1480, max(1180, int(available.width() * 0.92)))
+        target_height = min(1060, max(680, int(available.height() * 0.94)))
+        self.resize(target_width, target_height)
+
+    def _layout_profile(self) -> dict[str, int | bool]:
+        width = self.width()
+        height = self.height()
+        tight_height = height <= 720
+        notebook_height = height <= 820
+        roomy_width = width >= 1400
+        notebook_width = width >= 1240
+
+        margin_x = 14 if tight_height else 18 if width < 1400 else 22
+        margin_top = 8 if tight_height else 12 if notebook_height else 16
+        margin_bottom = 8 if tight_height else 10
+        gap = 8 if tight_height else 10 if notebook_height else 12
+
+        if tight_height:
+            top_height = 262
+            bottom_height = 182
+            log_height = 60
+        elif notebook_height:
+            top_height = 262
+            bottom_height = 210
+            log_height = 112
+        else:
+            top_height = 262
+            bottom_height = 210
+            log_height = 210 if roomy_width else 176
+
+        return {
+            "margin_x": margin_x,
+            "margin_top": margin_top,
+            "margin_bottom": margin_bottom,
+            "gap": gap,
+            "three_option_columns": notebook_width,
+            "top_height": top_height,
+            "bottom_height": bottom_height,
+            "log_height": log_height,
+            "tight_height": tight_height,
+            "notebook_height": notebook_height,
+            "roomy_width": roomy_width,
+            "notebook_width": notebook_width,
+        }
 
     def _resolve_base_dir(self) -> Path:
         if getattr(sys, "frozen", False):
@@ -905,6 +969,26 @@ class TrackHunterWindow(QMainWindow):
         widget.setMinimumHeight(36)
         return widget
 
+    def _sync_download_format(self, source: str, checked: bool) -> None:
+        if getattr(self, "_syncing_format", False):
+            return
+
+        self._syncing_format = True
+        try:
+            if source == "mp3":
+                if checked:
+                    self.aiff_format_check.setChecked(False)
+                elif not self.aiff_format_check.isChecked():
+                    self.mp3_format_check.setChecked(True)
+                return
+
+            if checked:
+                self.mp3_format_check.setChecked(False)
+            elif not self.mp3_format_check.isChecked():
+                self.aiff_format_check.setChecked(True)
+        finally:
+            self._syncing_format = False
+
     def _clear_grid(self, layout: QGridLayout) -> None:
         while layout.count():
             item = layout.takeAt(0)
@@ -936,40 +1020,29 @@ class TrackHunterWindow(QMainWindow):
         self.auth_grid.setColumnStretch(1, 1)
         self.auth_grid.setColumnStretch(3, 1)
 
-    def _place_options(self, compact: bool) -> None:
+    def _place_options(self, compact: bool, stacked: bool = False) -> None:
         self._clear_grid(self.options_grid)
-        if compact:
-            placements = [
-                (self.manual_option, 0, 0),
-                (self.assisted_option, 0, 1),
-                (self.force_option, 1, 0),
-                (self.retry_option, 1, 1),
-                (self.timeout_widget, 2, 0),
-                (self.settings_btn, 2, 1),
-            ]
-            for widget, row, column in placements:
-                self.options_grid.addWidget(widget, row, column, alignment=Qt.AlignmentFlag.AlignLeft)
-            self.options_grid.setColumnStretch(0, 1)
-            self.options_grid.setColumnStretch(1, 1)
-            for row in range(3):
-                self.options_grid.setRowMinimumHeight(row, 42)
-            return
-
+        profile = self._layout_profile()
+        self.options_grid.setContentsMargins(0, 8 if profile["tight_height"] else 10, 0, 0)
         placements = [
-            (self.manual_option, 0, 0),
-            (self.assisted_option, 0, 1),
-            (self.force_option, 1, 0),
-            (self.retry_option, 1, 1),
-            (self.timeout_widget, 2, 0),
-            (self.settings_btn, 2, 1),
+            (self.mp3_option, 0, 0),
+            (self.aiff_option, 0, 1),
+            (self.manual_option, 1, 0),
+            (self.assisted_option, 1, 1),
+            (self.force_option, 2, 0),
+            (self.retry_option, 2, 1),
+            (self.settings_action_widget, 3, 0),
         ]
 
         for widget, row, column in placements:
-            self.options_grid.addWidget(widget, row, column, alignment=Qt.AlignmentFlag.AlignLeft)
+            column_span = 2 if widget is self.settings_action_widget else 1
+            self.options_grid.addWidget(widget, row, column, 1, column_span, alignment=Qt.AlignmentFlag.AlignLeft)
         self.options_grid.setColumnStretch(0, 1)
         self.options_grid.setColumnStretch(1, 1)
-        for row in range(3):
-            self.options_grid.setRowMinimumHeight(row, 42)
+        for row in range(4):
+            self.options_grid.setRowMinimumHeight(row, 38)
+            self.options_grid.setRowStretch(row, 0)
+        self.options_grid.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def _place_summary(self, compact: bool) -> None:
         self._clear_grid(self.summary_grid)
@@ -977,41 +1050,97 @@ class TrackHunterWindow(QMainWindow):
             self.summary_grid.setColumnStretch(column, 0)
 
         cards = [self.downloaded_card, self.skipped_card, self.missing_card, self.error_card]
-        for index, card in enumerate(cards):
-            self.summary_grid.addWidget(card, 0, index, alignment=Qt.AlignmentFlag.AlignCenter)
-            self.summary_grid.setColumnStretch(index, 1)
-        self.summary_grid.addWidget(self.summary_history_widget, 1, 0, 1, 4, alignment=Qt.AlignmentFlag.AlignCenter)
+        if compact:
+            for index, card in enumerate(cards):
+                row = index // 2
+                column = index % 2
+                self.summary_grid.addWidget(card, row, column, alignment=Qt.AlignmentFlag.AlignCenter)
+                self.summary_grid.setColumnStretch(column, 1)
+            self.summary_grid.addWidget(self.summary_history_widget, 2, 0, 1, 2)
+        else:
+            for index, card in enumerate(cards):
+                self.summary_grid.addWidget(card, 0, index, alignment=Qt.AlignmentFlag.AlignCenter)
+                self.summary_grid.setColumnStretch(index, 1)
+            self.summary_grid.addWidget(self.summary_history_widget, 1, 0, 1, 4)
         self.summary_grid.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+    def _place_dashboard(self, stacked: bool) -> None:
+        self._clear_grid(self.dashboard_grid)
+        if stacked:
+            self.dashboard_grid.addWidget(self.credentials_panel, 0, 0)
+            self.dashboard_grid.addWidget(self.files_panel, 1, 0)
+            self.dashboard_grid.addWidget(self.options_panel, 2, 0)
+            self.dashboard_grid.addWidget(self.summary_panel, 3, 0)
+            self.dashboard_grid.setColumnStretch(0, 1)
+            self.dashboard_grid.setColumnStretch(1, 0)
+            return
+
+        self.dashboard_grid.addWidget(self.credentials_panel, 0, 0)
+        self.dashboard_grid.addWidget(self.options_panel, 0, 1)
+        self.dashboard_grid.addWidget(self.files_panel, 1, 0)
+        self.dashboard_grid.addWidget(self.summary_panel, 1, 1)
+        self.dashboard_grid.setColumnStretch(0, 1)
+        self.dashboard_grid.setColumnStretch(1, 1)
 
     def _apply_responsive_layout(self) -> None:
         width = self.width()
+        height = self.height()
+        profile = self._layout_profile()
         compact = width < 1500
-        window_height = self.height()
+        stacked = False
+        self._place_dashboard(stacked)
         self._place_authentication(compact)
-        self._place_options(compact)
-        self._place_summary(compact)
+        self._place_options(compact, stacked)
+        self._place_summary(False)
 
-        # Responsive minimum heights: avoids collisions in smaller windows.
-        if window_height <= 720:
-            top_row_min = 182
-            bottom_row_min = 146
-            log_min = 96
-        elif window_height <= 820:
-            top_row_min = 194
-            bottom_row_min = 158
-            log_min = 120
-        else:
-            top_row_min = 206 if compact else 214
-            bottom_row_min = 170 if compact else 182
-            log_min = 156 if compact else 210
-
+        top_row_min = int(profile["top_height"])
+        bottom_row_min = int(profile["bottom_height"])
+        log_min = int(profile["log_height"])
         self.credentials_panel.setMinimumHeight(top_row_min)
         self.options_panel.setMinimumHeight(top_row_min)
+        self.credentials_panel.setMaximumHeight(top_row_min)
+        self.options_panel.setMaximumHeight(top_row_min)
         self.files_panel.setMinimumHeight(bottom_row_min)
         self.summary_panel.setMinimumHeight(bottom_row_min)
+        self.files_panel.setMaximumHeight(bottom_row_min)
+        self.summary_panel.setMaximumHeight(bottom_row_min)
+        self.summary_history_widget.setVisible(not profile["tight_height"])
         self.log_panel.setMinimumWidth(0)
         self.log_panel.setMaximumWidth(16777215)
         self.log_panel.setMinimumHeight(log_min)
+        self.log_panel.setMaximumHeight(16777215)
+        self.output.setMinimumHeight(max(24, log_min - 64))
+        self.output.setMaximumHeight(16777215)
+        self.progress_bar.setMinimumWidth(240 if width < 980 else 420)
+
+        if hasattr(self, "logo_label"):
+            logo_height = 46 if profile["tight_height"] else 58 if profile["notebook_height"] else 70
+            self.logo_label.setPixmap(self.logo_pixmap.scaledToHeight(logo_height, Qt.TransformationMode.SmoothTransformation))
+            self.logo_label.setFixedHeight(logo_height + 6)
+            self.header_widget.setFixedHeight(logo_height + 6)
+
+        if hasattr(self, "root_layout"):
+            self.root_layout.setContentsMargins(
+                int(profile["margin_x"]),
+                int(profile["margin_top"]),
+                int(profile["margin_x"]),
+                int(profile["margin_bottom"]),
+            )
+            self.root_layout.setSpacing(5 if profile["tight_height"] else 7)
+
+        if hasattr(self, "dashboard_grid"):
+            self.dashboard_grid.setHorizontalSpacing(int(profile["gap"]))
+            self.dashboard_grid.setVerticalSpacing(int(profile["gap"]))
+            horizontal_margin = int(profile["margin_x"])
+            column_width = max(0, (width - (horizontal_margin * 2) - self.dashboard_grid.horizontalSpacing()) // 2)
+            self.dashboard_grid.setColumnMinimumWidth(0, column_width)
+            self.dashboard_grid.setColumnMinimumWidth(1, column_width)
+
+        if hasattr(self, "controls_layout"):
+            self.controls_layout.setSpacing(8 if profile["tight_height"] else 10)
+
+        if hasattr(self, "subtitle_label"):
+            self.subtitle_label.setVisible(not profile["tight_height"])
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
@@ -1158,24 +1287,37 @@ class TrackHunterWindow(QMainWindow):
     def _build_ui(self) -> None:
         central = QWidget(self)
         self.setCentralWidget(central)
-        root = QVBoxLayout(central)
+        self.root_layout = QVBoxLayout(central)
+        root = self.root_layout
         root.setContentsMargins(22, 16, 22, 10)
         root.setSpacing(8)
 
         logo_pixmap = QPixmap(str(asset_path("logo.png")))
+        header_widget = QWidget()
+        self.header_widget = header_widget
+        header_widget.setFixedHeight(76)
+        header = QHBoxLayout()
+        header_widget.setLayout(header)
+        header.setContentsMargins(0, 0, 0, 0)
+        header.setSpacing(12)
         if logo_pixmap.isNull():
             title = QLabel("TrackHunter")
             title.setStyleSheet("font-size: 28px; font-weight: 800; color: #f8fafc;")
-            root.addWidget(title)
+            header.addWidget(title)
         else:
-            title = QLabel()
-            title.setPixmap(logo_pixmap.scaledToHeight(70, Qt.TransformationMode.SmoothTransformation))
-            title.setFixedHeight(76)
-            title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-            root.addWidget(title)
+            self.logo_pixmap = logo_pixmap
+            self.logo_label = QLabel()
+            self.logo_label.setPixmap(logo_pixmap.scaledToHeight(70, Qt.TransformationMode.SmoothTransformation))
+            self.logo_label.setFixedHeight(76)
+            self.logo_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            header.addWidget(self.logo_label)
+        header.addStretch(1)
+        root.addWidget(header_widget)
         subtitle = QLabel("Automação de busca e downloads de músicas no MUZPA")
         subtitle.setObjectName("Hint")
-        root.addWidget(subtitle)
+        subtitle.setFixedHeight(20)
+        self.subtitle_label = subtitle
+        root.addWidget(self.subtitle_label)
 
         credentials = Panel("Autenticação")
         self.credentials_panel = credentials
@@ -1206,8 +1348,8 @@ class TrackHunterWindow(QMainWindow):
 
         files = Panel("Arquivos")
         self.files_panel = files
-        files.layout.setContentsMargins(16, 10, 16, 12)
-        files.layout.setSpacing(6)
+        files.layout.setContentsMargins(16, 14, 16, 12)
+        files.layout.setSpacing(8)
         files_layout = QGridLayout()
         files_layout.setContentsMargins(0, 0, 0, 0)
         files_layout.setHorizontalSpacing(10)
@@ -1254,12 +1396,11 @@ class TrackHunterWindow(QMainWindow):
 
         options = Panel("Opções")
         self.options_panel = options
-        options.layout.setContentsMargins(18, 16, 18, 18)
+        options.layout.setContentsMargins(16, 14, 16, 18)
         self.options_grid = QGridLayout()
         self.options_grid.setContentsMargins(0, 0, 0, 0)
         self.options_grid.setHorizontalSpacing(14)
         self.options_grid.setVerticalSpacing(10)
-        self.options_grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         manual_login_tip = "Abre o navegador para login manual se o automático falhar."
         assisted_search_tip = "Permite acompanhar a busca no navegador."
@@ -1267,6 +1408,15 @@ class TrackHunterWindow(QMainWindow):
         retry_missing_tip = "Busca apenas músicas pendentes como não encontradas."
         timeout_tip = "Tempo máximo de espera para carregar o login."
 
+        mp3_format_tip = "Baixa usando os botões MP3 do Muzpa."
+        aiff_format_tip = "Alterna para LOSSLESS e baixa usando os botões AIFF do Muzpa."
+        self._syncing_format = False
+        self.mp3_format_check = ToggleSwitch("Download MP3")
+        self.aiff_format_check = ToggleSwitch("Download AIFF")
+        self.mp3_format_check.setChecked(True)
+        self.aiff_format_check.setChecked(False)
+        self.mp3_format_check.toggled.connect(lambda checked: self._sync_download_format("mp3", checked))
+        self.aiff_format_check.toggled.connect(lambda checked: self._sync_download_format("aiff", checked))
         self.manual_login_check = ToggleSwitch("Login manual")
         self.headless_check = ToggleSwitch("Busca assistida")
         self.force_download_check = ToggleSwitch("Baixar novamente")
@@ -1277,19 +1427,24 @@ class TrackHunterWindow(QMainWindow):
 
         self.settings_btn = QPushButton("Arquivos")
         self.settings_btn.setObjectName("GhostButton")
-        self.settings_btn.setFixedWidth(120)
+        self.settings_btn.setFixedWidth(112)
         self.settings_btn.setFixedHeight(40)
         self.settings_btn.clicked.connect(self.open_settings)
 
+        self.mp3_option = self._option_with_tooltip(self.mp3_format_check, mp3_format_tip)
+        self.aiff_option = self._option_with_tooltip(self.aiff_format_check, aiff_format_tip)
         self.manual_option = self._option_with_tooltip(self.manual_login_check, manual_login_tip)
         self.assisted_option = self._option_with_tooltip(self.headless_check, assisted_search_tip)
         self.force_option = self._option_with_tooltip(self.force_download_check, force_download_tip)
+        self.retry_missing_check.setMinimumWidth(202)
         self.retry_option = self._option_with_tooltip(self.retry_missing_check, retry_missing_tip)
+        self.retry_option.setMinimumWidth(232)
+        self.retry_option.setMaximumWidth(252)
         self.timeout_widget = QWidget()
         self.timeout_widget.setMinimumHeight(40)
-        self.timeout_widget.setMinimumWidth(240)
-        self.timeout_widget.setMaximumWidth(320)
-        self.timeout_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.timeout_widget.setMinimumWidth(252)
+        self.timeout_widget.setMaximumWidth(280)
+        self.timeout_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         timeout_layout = QHBoxLayout()
         timeout_layout.setContentsMargins(0, 0, 0, 0)
         timeout_layout.setSpacing(8)
@@ -1299,15 +1454,29 @@ class TrackHunterWindow(QMainWindow):
         timeout_layout.addWidget(self._tooltip_badge(timeout_tip))
         timeout_layout.addWidget(self.timeout_spin)
         self.timeout_widget.setLayout(timeout_layout)
-        options.layout.addLayout(self.options_grid)
+
+        self.settings_action_widget = QWidget()
+        self.settings_action_widget.setMinimumWidth(376)
+        self.settings_action_widget.setMinimumHeight(42)
+        self.settings_action_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        settings_action_layout = QHBoxLayout(self.settings_action_widget)
+        settings_action_layout.setContentsMargins(0, 0, 0, 0)
+        settings_action_layout.setSpacing(12)
+        settings_action_layout.addWidget(self.timeout_widget)
+        settings_action_layout.addWidget(self.settings_btn)
+        settings_action_layout.addStretch(1)
+        options.layout.addLayout(self.options_grid, 1)
 
         controls = QHBoxLayout()
+        self.controls_layout = controls
         controls.setContentsMargins(0, 0, 0, 0)
         controls.setSpacing(12)
         self.start_btn = QPushButton("Iniciar")
         self.start_btn.setObjectName("StartButton")
         self.stop_btn = QPushButton("Parar")
         self.stop_btn.setObjectName("StopButton")
+        self.start_btn.setFixedSize(122, 32)
+        self.stop_btn.setFixedSize(122, 32)
         self.stop_btn.setEnabled(False)
         self.start_btn.clicked.connect(self.start_bot)
         self.stop_btn.clicked.connect(self.stop_bot)
@@ -1315,7 +1484,7 @@ class TrackHunterWindow(QMainWindow):
         self.stop_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaStop))
         summary_panel = Panel("Resumo")
         self.summary_panel = summary_panel
-        summary_panel.layout.setContentsMargins(18, 14, 18, 14)
+        summary_panel.layout.setContentsMargins(16, 14, 16, 14)
         summary_panel.layout.setSpacing(12)
         self.summary_grid = QGridLayout()
         self.summary_grid.setContentsMargins(0, 0, 0, 0)
@@ -1327,18 +1496,20 @@ class TrackHunterWindow(QMainWindow):
         self.error_card = SummaryCard("Erros", "#f87171")
         self.history_summary_label = QLabel("Histórico: 0 baixadas, 0 não encontradas pendentes.")
         self.history_summary_label.setObjectName("HistorySummary")
-        self.history_summary_label.setMinimumWidth(210)
-        self.history_summary_label.setMaximumWidth(250)
+        self.history_summary_label.setMinimumWidth(260)
+        self.history_summary_label.setMaximumWidth(360)
         self.history_summary_label.setWordWrap(True)
         self.history_btn = QPushButton("Ver histórico")
         self.history_btn.setObjectName("GhostButton")
-        self.history_btn.setFixedWidth(136)
+        self.history_btn.setFixedSize(136, 40)
         self.history_btn.clicked.connect(self.open_history)
         self.summary_history_widget = QWidget()
+        self.summary_history_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.summary_history_layout = QHBoxLayout(self.summary_history_widget)
         self.summary_history_layout.setContentsMargins(0, 0, 0, 0)
-        self.summary_history_layout.setSpacing(16)
-        self.summary_history_layout.addWidget(self.history_summary_label)
+        self.summary_history_layout.setSpacing(12)
+        self.summary_history_layout.addWidget(self.history_summary_label, 0, Qt.AlignmentFlag.AlignLeft)
+        self.summary_history_layout.addStretch(1)
         self.summary_history_layout.addWidget(self.history_btn)
         summary_panel.layout.addLayout(self.summary_grid)
 
@@ -1357,7 +1528,7 @@ class TrackHunterWindow(QMainWindow):
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.progress_bar.setFixedHeight(22)
+        self.progress_bar.setFixedHeight(32)
         self.progress_text = QLabel("0/0 Faixas - 0.0%")
         self.progress_text.setObjectName("ProgressText")
         self.progress_text.setMinimumWidth(132)
@@ -1367,24 +1538,18 @@ class TrackHunterWindow(QMainWindow):
         self.progress_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         controls.addWidget(self.progress_bar, 1)
         controls.addWidget(self.progress_text, 0)
-        controls.addSpacing(12)
+        controls.addSpacing(8)
         controls.addWidget(self.start_btn)
         controls.addWidget(self.stop_btn)
 
-        dashboard_grid = QGridLayout()
-        dashboard_grid.setContentsMargins(0, 0, 0, 0)
-        dashboard_grid.setHorizontalSpacing(12)
-        dashboard_grid.setVerticalSpacing(14)
-        dashboard_grid.addWidget(credentials, 0, 0)
-        dashboard_grid.addWidget(options, 0, 1)
-        dashboard_grid.addWidget(files, 1, 0)
-        dashboard_grid.addWidget(summary_panel, 1, 1)
-        dashboard_grid.setColumnStretch(0, 1)
-        dashboard_grid.setColumnStretch(1, 1)
-        dashboard_grid.setRowStretch(0, 1)
-        dashboard_grid.setRowStretch(1, 1)
+        self.dashboard_grid = QGridLayout()
+        self.dashboard_grid.setContentsMargins(0, 0, 0, 0)
+        self.dashboard_grid.setHorizontalSpacing(12)
+        self.dashboard_grid.setVerticalSpacing(14)
+        self.dashboard_grid.setRowStretch(0, 0)
+        self.dashboard_grid.setRowStretch(1, 0)
 
-        root.addLayout(dashboard_grid)
+        root.addLayout(self.dashboard_grid)
         root.addLayout(controls)
         root.addWidget(log_panel, 1)
         self._apply_responsive_layout()
@@ -1481,6 +1646,8 @@ class TrackHunterWindow(QMainWindow):
             history,
             "--wait-login",
             str(self.timeout_spin.value()),
+            "--download-format",
+            "aiff" if self.aiff_format_check.isChecked() else "mp3",
         ]
 
         if wants_manual_login and not has_credentials:
