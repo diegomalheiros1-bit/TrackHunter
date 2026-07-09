@@ -34,6 +34,24 @@ def wait_for_url_or_stop(page, url_pattern: str, timeout_ms: int, stop_event) ->
     raise last_error or TimeoutError(f"Timeout aguardando URL: {url_pattern}")
 
 
+def wait_for_condition_or_stop(check, timeout_ms: int, stop_event, interval_ms: int = 500):
+    """
+    Aguarda uma condicao customizada checando parada do usuario entre tentativas.
+    Retorna o valor truthy produzido por check(), ou None quando expira.
+    """
+    deadline = time.perf_counter() + (timeout_ms / 1000)
+    while time.perf_counter() < deadline:
+        raise_if_stopped(stop_event)
+        value = check()
+        if value:
+            return value
+        remaining_ms = max(1, int((deadline - time.perf_counter()) * 1000))
+        page_wait_ms = min(interval_ms, remaining_ms)
+        if page_wait_ms > 0:
+            time.sleep(page_wait_ms / 1000)
+    return None
+
+
 def normalize_text(value: str) -> str:
     """
     Padroniza texto para comparacoes:

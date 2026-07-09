@@ -2,11 +2,11 @@
 
 Use o ZIP da ultima release final para distribuir o programa para usuarios finais.
 
-Versao em desenvolvimento definida: `v2.0.5`.
+Versao em desenvolvimento definida: `v2.1`.
 
 Ultima release final gerada: `v2.0.3`.
 
-A versao `v2.0.5` esta salva localmente e compilada em `dist/TrackHunter`, mas ainda nao foi empacotada como release final em ZIP.
+A versao `v2.1` esta salva localmente e compilada em `dist/TrackHunter`, mas ainda nao foi empacotada como release final em ZIP.
 
 ## Opcoes
 
@@ -20,7 +20,7 @@ A versao `v2.0.5` esta salva localmente e compilada em `dist/TrackHunter`, mas a
   - ZIP atual gerado para distribuicao.
 
 - `dist/TrackHunter/TrackHunter.exe`
-  - Executavel local de desenvolvimento da versao `v2.0.5`.
+  - Executavel local de desenvolvimento da versao `v2.1`.
 
 - `scripts/`
   - Contem scripts auxiliares para desenvolvimento, build e execucao via Python.
@@ -29,6 +29,8 @@ A versao `v2.0.5` esta salva localmente e compilada em `dist/TrackHunter`, mas a
 
 - Na interface, use o botao `Tracklist` para adicionar, editar e salvar as musicas.
 - Use os toggles `Download MP3` e `Download AIFF` em `Opcoes` para escolher o formato antes de iniciar.
+- Em internet lenta, aumente `Timeout Busca` para o app aguardar mais pelos resultados antes de marcar uma musica como nao encontrada.
+- O indicador de conexao mostra uma leitura simples da resposta do Muzpa.
 - O historico respeita o formato escolhido, entao uma faixa ja baixada em `MP3` ainda pode ser baixada em `AIFF`.
 - O modo `Somente nao encontradas` tambem respeita o formato escolhido.
 - O download automatico nao usa `ZIP`/`Download` como fallback.

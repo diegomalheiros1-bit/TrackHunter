@@ -49,6 +49,8 @@ def run(argv: list[str] | None = None, stop_event=None) -> None:
     parser.add_argument("--headless", action="store_true", help="Executa sem interface grafica")
     # Tempo maximo para aguardar login.
     parser.add_argument("--wait-login", type=int, default=90000, help="Timeout de login em ms")
+    # Tempo maximo para aguardar resultados de cada pesquisa.
+    parser.add_argument("--search-timeout", type=int, default=15000, help="Timeout da pesquisa de cada musica em ms")
     # Se ativo, usuario faz login manual na janela.
     parser.add_argument("--manual-login", action="store_true", help="Nao preenche login automaticamente")
     # Arquivo JSON usado para evitar downloads duplicados e guardar nao encontradas.
@@ -139,6 +141,7 @@ def run(argv: list[str] | None = None, stop_event=None) -> None:
                 history,
                 force_download=args.force_download,
                 download_format=args.download_format,
+                search_timeout_ms=args.search_timeout,
                 stop_event=stop_event,
             )
             save_history(history_path, history)

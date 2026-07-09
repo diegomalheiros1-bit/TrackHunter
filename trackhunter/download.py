@@ -5,7 +5,7 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 from .history import downloaded_file_name, is_downloaded, is_file_downloaded, is_missing, mark_downloaded, mark_missing
 from .models import TrackResult
 from .search import MIN_MATCH_SCORE, best_download_candidate_for_track, find_search_input
-from .utils import StopRequested, build_fallback_query, normalize_text, raise_if_stopped
+from .utils import StopRequested, build_fallback_query, normalize_text, raise_if_stopped, wait_for_condition_or_stop
 
 
 def click_download(page: Page, candidate, stop_event=None):
@@ -55,6 +55,7 @@ def process_tracks(
     history,
     force_download: bool = False,
     download_format: str = "mp3",
+    search_timeout_ms: int = 15000,
     stop_event=None,
 ) -> List[TrackResult]:
     """
@@ -70,6 +71,7 @@ def process_tracks(
     track_list = list(tracks)
     total = len(track_list)
     normalized_format = "aiff" if str(download_format).lower() == "aiff" else "mp3"
+    normalized_search_timeout_ms = max(2500, int(search_timeout_ms or 15000))
     select_site_download_mode(page, normalized_format, stop_event=stop_event)
 
     def print_progress(current: int, status: str) -> None:
@@ -121,11 +123,22 @@ def process_tracks(
                 search_input.fill("")
                 search_input.fill(query)
                 search_input.press("Enter")
-                page.wait_for_timeout(2500)
 
-                row, score = best_download_candidate_for_track(page, track, normalized_format)
+                def find_loaded_candidate():
+                    row_candidate, candidate_score = best_download_candidate_for_track(page, track, normalized_format)
+                    if row_candidate is not None and candidate_score >= MIN_MATCH_SCORE:
+                        return row_candidate, candidate_score
+                    return None
+
+                loaded_candidate = wait_for_condition_or_stop(
+                    find_loaded_candidate,
+                    normalized_search_timeout_ms,
+                    stop_event,
+                    interval_ms=700,
+                )
+                row, score = loaded_candidate if loaded_candidate else (None, -1)
                 if row is None or score < MIN_MATCH_SCORE:
-                    last_detail = f"Sem correspondencia relevante ({attempt_name})"
+                    last_detail = f"Sem correspondencia relevante ({attempt_name}, timeout pesquisa {normalized_search_timeout_ms} ms)"
                     continue
 
                 try:

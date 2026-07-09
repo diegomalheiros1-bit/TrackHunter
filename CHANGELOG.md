@@ -1,6 +1,26 @@
 # Changelog
 
-## v2.0.5 - Em desenvolvimento
+## v2.1 - 2026-07-09
+
+### Added
+- Controle `Timeout Busca` para aguardar mais tempo pelos resultados de cada musica em conexoes lentas.
+- Argumento CLI `--search-timeout` para configurar o timeout da pesquisa por musica.
+- Indicador visual de conexao com medicao periodica de resposta do Muzpa.
+
+### Changed
+- Fluxo de busca agora aguarda candidato valido ate o `Timeout Busca` antes de marcar a musica como nao encontrada.
+- Indicador de conexao refinado com icone de Wi-Fi, campo compacto e cores por latencia: otima abaixo de `2500 ms`, boa ate `4499 ms` e ruim acima disso.
+- Quadro `Autenticacao` ajustado para centralizar verticalmente campos e controles.
+- Campos de timeout compactados para reduzir sobra visual nos seletores de milissegundos.
+- Botao `Arquivos` reposicionado a direita da linha de opcoes, mantendo bordas e espacamentos do layout.
+- Versao local marcada como `v2.1`.
+
+### Tested
+- Validado argumento CLI `--search-timeout`.
+- Validado layout principal em `1916x1028`, `1366x768` e `1180x690`.
+- Recompilado executavel local em `dist/TrackHunter`.
+
+## v2.0.5 - 2026-07-09
 
 ### Changed
 - Interface principal refinada para manter os quatro quadros (`Autenticacao`, `Opcoes`, `Arquivos` e `Resumo`) alinhados em diferentes resolucoes.

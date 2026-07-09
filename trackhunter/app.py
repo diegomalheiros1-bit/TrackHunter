@@ -4,10 +4,11 @@ import sys
 import ctypes
 import time
 import threading
+import urllib.request
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QThread, Signal, QUrl
+from PySide6.QtCore import QPointF, QRectF, QSettings, QSize, Qt, QThread, QTimer, Signal, QUrl
 from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QIcon, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -266,6 +267,15 @@ QLabel#HistorySummary {
     color: #94a3b8;
     padding: 7px 12px;
 }
+QLabel#ConnectionStatus {
+    background: #0f141d;
+    border: 1px solid #253041;
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 9pt;
+    padding: 0 10px;
+    min-height: 36px;
+}
 QLabel#TooltipBadge {
     background: #253041;
     border: 1px solid #3b4a60;
@@ -323,8 +333,8 @@ class MillisecondsStepper(QFrame):
         self.minimum = minimum
         self.maximum = maximum
         self.step = step
-        self.setMinimumWidth(126)
-        self.setMaximumWidth(142)
+        self.setMinimumWidth(106)
+        self.setMaximumWidth(112)
         self.setFixedHeight(40)
 
         layout = QHBoxLayout(self)
@@ -332,7 +342,7 @@ class MillisecondsStepper(QFrame):
         layout.setSpacing(0)
 
         self.input = QLineEdit()
-        self.input.setMinimumWidth(86)
+        self.input.setMinimumWidth(66)
         self.input.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.input.editingFinished.connect(self._normalize_text)
 
@@ -366,7 +376,7 @@ class MillisecondsStepper(QFrame):
         self.input.setCursorPosition(0)
 
     def sizeHint(self) -> QSize:
-        return QSize(142, 40)
+        return QSize(112, 40)
 
     def step_by(self, delta: int) -> None:
         self.setValue(self.value() + delta)
@@ -574,6 +584,30 @@ class _StreamEmitter:
 
     def flush(self) -> None:
         return
+
+
+class ConnectionCheckWorker(QThread):
+    checked = Signal(str, str)
+
+    def __init__(self, url: str = "https://srv.muzpa.com", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.url = url
+
+    def run(self) -> None:
+        started_at = time.perf_counter()
+        try:
+            request = urllib.request.Request(self.url, headers={"User-Agent": "TrackHunter/2.0"})
+            with urllib.request.urlopen(request, timeout=5) as response:
+                response.read(1)
+            elapsed_ms = int((time.perf_counter() - started_at) * 1000)
+            if elapsed_ms < 2500:
+                self.checked.emit(f"📶 Ótima ({elapsed_ms} ms)", "success")
+            elif elapsed_ms <= 4499:
+                self.checked.emit(f"📶 Boa ({elapsed_ms} ms)", "warning")
+            else:
+                self.checked.emit(f"📶 Ruim ({elapsed_ms} ms)", "error")
+        except Exception:
+            self.checked.emit("📶 Ruim", "error")
 
 
 class BotWorker(QThread):
@@ -848,7 +882,7 @@ class HistoryDialog(QDialog):
 class TrackHunterWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("TrackHunter v2.0.5")
+        self.setWindowTitle("TrackHunter v2.1")
         self.setWindowIcon(QIcon(str(asset_path("app_icon.png"))))
         self.setMinimumSize(1180, 680)
 
@@ -859,6 +893,7 @@ class TrackHunterWindow(QMainWindow):
         self.current_track = ""
         self.current_track_index = 0
         self.run_started_at: float | None = None
+        self.connection_worker: ConnectionCheckWorker | None = None
 
         self.logs_path = str(self.base_dir / "logs")
         self.history_path = str(self.base_dir / "state" / "track_history.json")
@@ -891,18 +926,18 @@ class TrackHunterWindow(QMainWindow):
         margin_x = 14 if tight_height else 18 if width < 1400 else 22
         margin_top = 8 if tight_height else 12 if notebook_height else 16
         margin_bottom = 8 if tight_height else 10
-        gap = 8 if tight_height else 10 if notebook_height else 12
+        gap = 6 if tight_height else 10 if notebook_height else 12
 
         if tight_height:
-            top_height = 262
+            top_height = 306
             bottom_height = 182
             log_height = 60
         elif notebook_height:
-            top_height = 262
+            top_height = 310
             bottom_height = 210
             log_height = 112
         else:
-            top_height = 262
+            top_height = 310
             bottom_height = 210
             log_height = 210 if roomy_width else 176
 
@@ -989,6 +1024,31 @@ class TrackHunterWindow(QMainWindow):
         finally:
             self._syncing_format = False
 
+    def _refresh_connection_status(self) -> None:
+        if self.connection_worker and self.connection_worker.isRunning():
+            return
+        if not hasattr(self, "connection_status_label"):
+            return
+        self.connection_status_label.setText("📶 Testando...")
+        self.connection_status_label.setStyleSheet("color: #cbd5e1; border-color: #334155;")
+        self.connection_worker = ConnectionCheckWorker(parent=self)
+        self.connection_worker.checked.connect(self._set_connection_status)
+        self.connection_worker.finished.connect(lambda: setattr(self, "connection_worker", None))
+        self.connection_worker.finished.connect(self.connection_worker.deleteLater)
+        self.connection_worker.start()
+
+    def _set_connection_status(self, text: str, kind: str) -> None:
+        if not hasattr(self, "connection_status_label"):
+            return
+        colors = {
+            "success": ("#bbf7d0", "#166534", "#052e16"),
+            "warning": ("#fde68a", "#a16207", "#422006"),
+            "error": ("#fecaca", "#991b1b", "#450a0a"),
+        }
+        color, border, background = colors.get(kind, ("#94a3b8", "#253041", "#0f141d"))
+        self.connection_status_label.setText(text)
+        self.connection_status_label.setStyleSheet(f"background: {background}; color: {color}; border-color: {border};")
+
     def _clear_grid(self, layout: QGridLayout) -> None:
         while layout.count():
             item = layout.takeAt(0)
@@ -1004,21 +1064,15 @@ class TrackHunterWindow(QMainWindow):
 
     def _place_authentication(self, compact: bool) -> None:
         self._clear_grid(self.auth_grid)
-        if compact:
-            self.auth_grid.addWidget(self.email_label, 0, 0)
-            self.auth_grid.addWidget(self.email_input, 0, 1)
-            self.auth_grid.addWidget(self.password_label, 1, 0)
-            self.auth_grid.addWidget(self.password_input, 1, 1)
-            self.auth_grid.setColumnStretch(1, 1)
-            self.auth_grid.setColumnStretch(3, 0)
-            return
-
         self.auth_grid.addWidget(self.email_label, 0, 0)
         self.auth_grid.addWidget(self.email_input, 0, 1)
-        self.auth_grid.addWidget(self.password_label, 0, 2)
-        self.auth_grid.addWidget(self.password_input, 0, 3)
+        self.auth_grid.addWidget(self.password_label, 1, 0)
+        self.auth_grid.addWidget(self.password_input, 1, 1)
+        self.auth_grid.setColumnStretch(0, 0)
         self.auth_grid.setColumnStretch(1, 1)
-        self.auth_grid.setColumnStretch(3, 1)
+        self.auth_grid.setColumnStretch(2, 0)
+        self.auth_grid.setColumnStretch(3, 0)
+        self.auth_grid.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
     def _place_options(self, compact: bool, stacked: bool = False) -> None:
         self._clear_grid(self.options_grid)
@@ -1036,7 +1090,10 @@ class TrackHunterWindow(QMainWindow):
 
         for widget, row, column in placements:
             column_span = 2 if widget is self.settings_action_widget else 1
-            self.options_grid.addWidget(widget, row, column, 1, column_span, alignment=Qt.AlignmentFlag.AlignLeft)
+            if widget is self.settings_action_widget:
+                self.options_grid.addWidget(widget, row, column, 1, column_span)
+            else:
+                self.options_grid.addWidget(widget, row, column, 1, column_span, alignment=Qt.AlignmentFlag.AlignLeft)
         self.options_grid.setColumnStretch(0, 1)
         self.options_grid.setColumnStretch(1, 1)
         for row in range(4):
@@ -1126,7 +1183,7 @@ class TrackHunterWindow(QMainWindow):
                 int(profile["margin_x"]),
                 int(profile["margin_bottom"]),
             )
-            self.root_layout.setSpacing(5 if profile["tight_height"] else 7)
+            self.root_layout.setSpacing(3 if profile["tight_height"] else 7)
 
         if hasattr(self, "dashboard_grid"):
             self.dashboard_grid.setHorizontalSpacing(int(profile["gap"]))
@@ -1196,6 +1253,10 @@ class TrackHunterWindow(QMainWindow):
         self.settings.remove("credentials/password")
 
     def closeEvent(self, event) -> None:
+        if hasattr(self, "connection_timer"):
+            self.connection_timer.stop()
+        if self.connection_worker and self.connection_worker.isRunning():
+            self.connection_worker.wait(1500)
         self._sync_saved_credentials()
         super().closeEvent(event)
 
@@ -1334,7 +1395,13 @@ class TrackHunterWindow(QMainWindow):
         self.auth_grid.setContentsMargins(0, 0, 0, 0)
         self.auth_grid.setHorizontalSpacing(12)
         self.auth_grid.setVerticalSpacing(8)
-        credentials.layout.addLayout(self.auth_grid)
+
+        self.auth_content_widget = QWidget()
+        self.auth_content_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.auth_content_layout = QVBoxLayout(self.auth_content_widget)
+        self.auth_content_layout.setContentsMargins(0, 0, 0, 0)
+        self.auth_content_layout.setSpacing(10)
+        self.auth_content_layout.addLayout(self.auth_grid)
 
         self.save_credentials_check = ToggleSwitch("Salvar credenciais")
         self.save_credentials_check.setToolTip("Salva usuário e senha neste Windows para preencher automaticamente na próxima abertura.")
@@ -1344,7 +1411,10 @@ class TrackHunterWindow(QMainWindow):
         credentials_footer.setSpacing(10)
         credentials_footer.addWidget(self.save_credentials_check)
         credentials_footer.addWidget(self._help_label("As credenciais são criptografadas e salvas apenas no seu computador."), 1)
-        credentials.layout.addLayout(credentials_footer)
+        self.auth_content_layout.addLayout(credentials_footer)
+        credentials.layout.addStretch(1)
+        credentials.layout.addWidget(self.auth_content_widget)
+        credentials.layout.addStretch(2)
 
         files = Panel("Arquivos")
         self.files_panel = files
@@ -1407,6 +1477,7 @@ class TrackHunterWindow(QMainWindow):
         force_download_tip = "Baixa novamente, mesmo se já existir no histórico."
         retry_missing_tip = "Busca apenas músicas pendentes como não encontradas."
         timeout_tip = "Tempo máximo de espera para carregar o login."
+        search_timeout_tip = "Tempo máximo para aguardar os resultados de cada música antes de marcar como não encontrada."
 
         mp3_format_tip = "Baixa usando os botões MP3 do Muzpa."
         aiff_format_tip = "Alterna para LOSSLESS e baixa usando os botões AIFF do Muzpa."
@@ -1424,6 +1495,8 @@ class TrackHunterWindow(QMainWindow):
 
         self.timeout_spin = MillisecondsStepper(10000, 600000, 5000)
         self.timeout_spin.setToolTip(timeout_tip)
+        self.search_timeout_spin = MillisecondsStepper(5000, 180000, 5000)
+        self.search_timeout_spin.setToolTip(search_timeout_tip)
 
         self.settings_btn = QPushButton("Arquivos")
         self.settings_btn.setObjectName("GhostButton")
@@ -1442,8 +1515,8 @@ class TrackHunterWindow(QMainWindow):
         self.retry_option.setMaximumWidth(252)
         self.timeout_widget = QWidget()
         self.timeout_widget.setMinimumHeight(40)
-        self.timeout_widget.setMinimumWidth(252)
-        self.timeout_widget.setMaximumWidth(280)
+        self.timeout_widget.setMinimumWidth(224)
+        self.timeout_widget.setMaximumWidth(238)
         self.timeout_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         timeout_layout = QHBoxLayout()
         timeout_layout.setContentsMargins(0, 0, 0, 0)
@@ -1455,16 +1528,42 @@ class TrackHunterWindow(QMainWindow):
         timeout_layout.addWidget(self.timeout_spin)
         self.timeout_widget.setLayout(timeout_layout)
 
+        self.search_timeout_widget = QWidget()
+        self.search_timeout_widget.setMinimumHeight(40)
+        self.search_timeout_widget.setMinimumWidth(224)
+        self.search_timeout_widget.setMaximumWidth(238)
+        self.search_timeout_widget.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        search_timeout_layout = QHBoxLayout()
+        search_timeout_layout.setContentsMargins(0, 0, 0, 0)
+        search_timeout_layout.setSpacing(8)
+        search_timeout_label = self._field_label("Timeout Busca")
+        search_timeout_label.setToolTip(search_timeout_tip)
+        search_timeout_layout.addWidget(search_timeout_label)
+        search_timeout_layout.addWidget(self._tooltip_badge(search_timeout_tip))
+        search_timeout_layout.addWidget(self.search_timeout_spin)
+        self.search_timeout_widget.setLayout(search_timeout_layout)
+
+        self.connection_status_label = QLabel("📶 Não testada")
+        self.connection_status_label.setObjectName("ConnectionStatus")
+        self.connection_status_label.setMinimumWidth(132)
+        self.connection_status_label.setMaximumWidth(172)
+        self.connection_status_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.connection_status_label.setToolTip("Mede a resposta do Muzpa: ótima abaixo de 2500 ms, boa até 4499 ms e ruim acima disso.")
+
         self.settings_action_widget = QWidget()
-        self.settings_action_widget.setMinimumWidth(376)
-        self.settings_action_widget.setMinimumHeight(42)
+        self.settings_action_widget.setMinimumWidth(470)
+        self.settings_action_widget.setMinimumHeight(84)
         self.settings_action_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        settings_action_layout = QHBoxLayout(self.settings_action_widget)
+        settings_action_layout = QGridLayout(self.settings_action_widget)
         settings_action_layout.setContentsMargins(0, 0, 0, 0)
-        settings_action_layout.setSpacing(12)
-        settings_action_layout.addWidget(self.timeout_widget)
-        settings_action_layout.addWidget(self.settings_btn)
-        settings_action_layout.addStretch(1)
+        settings_action_layout.setHorizontalSpacing(12)
+        settings_action_layout.setVerticalSpacing(6)
+        settings_action_layout.addWidget(self.timeout_widget, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        settings_action_layout.addWidget(self.search_timeout_widget, 0, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        settings_action_layout.addWidget(self.connection_status_label, 1, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        settings_action_layout.addWidget(self.settings_btn, 1, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        settings_action_layout.setColumnStretch(0, 0)
+        settings_action_layout.setColumnStretch(1, 1)
         options.layout.addLayout(self.options_grid, 1)
 
         controls = QHBoxLayout()
@@ -1558,10 +1657,17 @@ class TrackHunterWindow(QMainWindow):
         self.downloads_input.setText(str(self.base_dir / "downloads"))
         self.manual_login_check.setChecked(False)
         self.timeout_spin.setValue(30000)
+        self.search_timeout_spin.setValue(15000)
         self._ensure_tracklist_file()
         self._validate_tracklist_status()
         self._reset_summary()
         self._refresh_history_summary()
+        if QGuiApplication.platformName().lower() != "offscreen":
+            self._refresh_connection_status()
+            self.connection_timer = QTimer(self)
+            self.connection_timer.setInterval(30000)
+            self.connection_timer.timeout.connect(self._refresh_connection_status)
+            self.connection_timer.start()
 
     def _ensure_tracklist_file(self) -> None:
         path = Path(self.tracklist_path)
@@ -1646,6 +1752,8 @@ class TrackHunterWindow(QMainWindow):
             history,
             "--wait-login",
             str(self.timeout_spin.value()),
+            "--search-timeout",
+            str(self.search_timeout_spin.value()),
             "--download-format",
             "aiff" if self.aiff_format_check.isChecked() else "mp3",
         ]
@@ -1667,6 +1775,8 @@ class TrackHunterWindow(QMainWindow):
         self._refresh_history_summary()
         self._add_log_line("Iniciando TrackHunter...")
         self._add_log_line(f"Pasta de logs: {logs}")
+        self._add_log_line(f"Timeout de pesquisa: {self.search_timeout_spin.value()} ms")
+        self._refresh_connection_status()
         if has_credentials:
             self._add_log_line("Credenciais detectadas: login automático habilitado.")
         elif wants_manual_login:
