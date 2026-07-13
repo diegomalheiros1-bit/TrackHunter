@@ -16,8 +16,11 @@ state/*.txt
 
 # Build artifacts
 build/
+build-onefile/
 dist/
+dist-onefile/
 release/
+TrackHunter.spec
 
 # Local secrets/config
 .env
