@@ -2,6 +2,8 @@
 
 TrackHunter e uma automacao em Python + Playwright para buscar faixas no Muzpa, baixar arquivos MP3 ou AIFF e manter um historico local para evitar downloads duplicados.
 
+> Estado tecnico atual: a branch `refactor/reliability-and-maintainability` adiciona baseline tecnico, testes automatizados e persistencia de historico mais segura sem mudar o fluxo principal da interface ou da CLI.
+
 ## O Que Ele Faz
 
 O TrackHunter automatiza este fluxo:
@@ -36,6 +38,8 @@ TrackHunter/
 |  |- utils.py       # normalizacao de texto, parsing da tracklist e helpers
 |  `- models.py      # dataclasses usadas entre os modulos
 |- scripts/          # scripts auxiliares de build/execucao
+|- tests/            # testes unitarios sem acesso ao Muzpa
+|- docs/             # baseline, arquitetura, instalador e processo de release
 |- dist/             # executavel gerado pelo PyInstaller
 |- assets/           # logo e icone do aplicativo
 |- requirements.txt
@@ -50,6 +54,13 @@ TrackHunter/
 ```bash
 pip install -r requirements.txt
 playwright install chromium
+```
+
+Para desenvolvimento e testes:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -v
 ```
 
 ## Tracklist
@@ -167,6 +178,7 @@ Com isso, os artefatos finais sempre seguem o padrao:
 
 - `release/TrackHunter-<versao>/TrackHunter.exe`
 - `release/TrackHunter-<versao>.zip`
+- `release/TrackHunter-<versao>-Setup.exe`
 
 Release atual gerada:
 
@@ -176,8 +188,16 @@ Release atual gerada:
 Executavel local de desenvolvimento:
 
 - `dist/TrackHunter/TrackHunter.exe`
+- `dist-onefile/TrackHunter.exe`
 
 Regra de trabalho: sempre que houver alteracao relevante de interface, fluxo ou empacotamento, atualize a versao antes de gerar nova release.
+
+Documentacao detalhada:
+
+- `docs/TECHNICAL_BASELINE.md`
+- `docs/ARCHITECTURE.md`
+- `docs/RELEASE_PROCESS.md`
+- `docs/INSTALLER.md`
 
 ## Argumentos CLI
 
@@ -209,6 +229,7 @@ Esse historico serve para:
 - tentar musicas nao encontradas em execucoes futuras
 - remover uma musica das pendencias quando ela for baixada
 - separar downloads por formato, permitindo baixar a mesma faixa em `MP3` e depois em `AIFF`
+- preservar progresso durante a execucao, salvando o historico apos cada faixa resolvida ou marcada como nao encontrada
 
 Comportamentos importantes:
 
@@ -217,6 +238,56 @@ Comportamentos importantes:
 - Musicas nao encontradas continuam elegiveis para buscas futuras.
 - O modo `Somente nao encontradas` respeita o formato selecionado: pendencias de `MP3` nao sao misturadas com pendencias de `AIFF`.
 - `--force-download` ignora o historico.
+- A escrita do historico e atomica: primeiro grava um arquivo temporario, depois substitui o JSON final.
+- Se `state/track_history.json` estiver corrompido, o TrackHunter cria um backup `track_history.corrupted_YYYYMMDD_HHMMSS.json` e inicia com historico vazio.
+
+## Testes
+
+A suite de testes usa `pytest` e nao abre Chromium, nao acessa o Muzpa e nao realiza downloads reais.
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m pytest -v
+```
+
+Cobertura atual:
+
+- `tests/test_utils.py`: normalizacao, parsing e tracklist.
+- `tests/test_search.py`: scoring de candidatos e falsos positivos conhecidos.
+- `tests/test_history.py`: persistencia, formatos, JSON corrompido e escrita atomica.
+- `tests/test_report.py`: formatacao de duracao e geracao de logs finais.
+- `tests/test_config.py`: placeholder ate a criacao da configuracao tipada.
+
+Resultado validado nesta branch:
+
+```text
+42 passed
+```
+
+## Instalador Windows
+
+O instalador atual e gerado por:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\create_installer.ps1
+```
+
+Ele usa `dist-onefile/TrackHunter.exe` e gera:
+
+```text
+release/TrackHunter-v2.1-Setup.exe
+```
+
+Fluxo atual:
+
+- mostra Termo de Uso antes da instalacao;
+- bloqueia `Continuar` ate o usuario aceitar o termo;
+- permite escolher a pasta de instalacao;
+- cria atalhos;
+- registra o app em Aplicativos instalados do Windows;
+- inclui desinstalador.
+
+O setup gerado tem cerca de 381 MB e nao deve ser commitado no GitHub.
 
 ## Estrategia de Busca
 
