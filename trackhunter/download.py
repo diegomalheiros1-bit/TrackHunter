@@ -1,4 +1,4 @@
-from typing import Iterable, List
+from typing import Callable, Iterable, List
 
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
@@ -57,6 +57,7 @@ def process_tracks(
     download_format: str = "mp3",
     search_timeout_ms: int = 15000,
     stop_event=None,
+    on_history_changed: Callable[[dict], None] | None = None,
 ) -> List[TrackResult]:
     """
     Processa a tracklist faixa a faixa.
@@ -79,6 +80,10 @@ def process_tracks(
         percent = (current / total * 100) if total else 100
         print(f"    Status: {status} | Progresso: {current}/{total} ({percent:.1f}%)")
 
+    def notify_history_changed() -> None:
+        if on_history_changed is not None:
+            on_history_changed(history)
+
     for idx, track in enumerate(track_list, start=1):
         raise_if_stopped(stop_event)
         print(f"[{idx}/{total}] Buscando: {track}")
@@ -90,6 +95,7 @@ def process_tracks(
                 if known_file and (downloads_dir / known_file).exists():
                     if is_missing(history, track, normalized_format):
                         mark_downloaded(history, track, known_file, normalized_format)
+                        notify_history_changed()
                         results.append(TrackResult(track, "baixada", "Resolvida: faixa pendente ja existia no historico", file_name=known_file))
                         print("    Resolvida: pendencia ja estava baixada no historico")
                         print_progress(idx, "baixada")
@@ -157,6 +163,7 @@ def process_tracks(
                     # Tambem associa esta linha da tracklist ao arquivo conhecido.
                     was_missing = is_missing(history, track, normalized_format)
                     mark_downloaded(history, track, file_name, normalized_format)
+                    notify_history_changed()
                     if was_missing:
                         results.append(TrackResult(track, "baixada", "Resolvida: arquivo ja existia no historico", file_name=file_name))
                         print(f"    Resolvida: arquivo ja baixado ({file_name})")
@@ -172,6 +179,7 @@ def process_tracks(
                 target = downloads_dir / file_name if file_name else downloads_dir / f"download_{idx}.bin"
                 download.save_as(target)
                 mark_downloaded(history, track, file_name, normalized_format)
+                notify_history_changed()
                 results.append(TrackResult(track, "baixada", f"OK ({attempt_name})", file_name=file_name))
                 print(f"    Download iniciado: {file_name}")
                 print_progress(idx, "baixada")
@@ -182,6 +190,7 @@ def process_tracks(
 
             if not downloaded:
                 mark_missing(history, track, last_detail, normalized_format)
+                notify_history_changed()
                 results.append(TrackResult(track, "nao_encontrada", last_detail))
                 print_progress(idx, "nao_encontrada")
         except PlaywrightTimeoutError:
@@ -189,6 +198,7 @@ def process_tracks(
             # um resultado baixavel para essa faixa dentro do tempo esperado.
             detail = "Timeout durante busca/download"
             mark_missing(history, track, detail, normalized_format)
+            notify_history_changed()
             results.append(TrackResult(track, "nao_encontrada", detail))
             print_progress(idx, "nao_encontrada")
         except StopRequested:

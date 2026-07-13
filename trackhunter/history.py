@@ -1,9 +1,15 @@
 import json
+import logging
+import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
 from .utils import normalize_text
+
+
+logger = logging.getLogger(__name__)
 
 
 def empty_history() -> Dict:
@@ -70,8 +76,15 @@ def load_history(path: Path) -> Dict:
     if not path.exists():
         return empty_history()
 
-    with path.open("r", encoding="utf-8") as fh:
-        data = json.load(fh)
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = path.with_name(f"{path.stem}.corrupted_{timestamp}{path.suffix}")
+        shutil.copy2(path, backup_path)
+        logger.warning("Historico JSON corrompido movido para backup: %s", backup_path)
+        return empty_history()
 
     history = empty_history()
     history.update(data)
@@ -79,10 +92,14 @@ def load_history(path: Path) -> Dict:
 
 
 def save_history(path: Path, history: Dict) -> None:
-    """Salva historico em JSON, criando a pasta se necessario."""
+    """Salva historico em JSON com substituicao atomica."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as fh:
+    temporary_path = path.with_suffix(path.suffix + ".tmp")
+    with temporary_path.open("w", encoding="utf-8") as fh:
         json.dump(history, fh, ensure_ascii=False, indent=2)
+        fh.flush()
+        os.fsync(fh.fileno())
+    temporary_path.replace(path)
 
 
 def is_downloaded(history: Dict, track: str, download_format: str = "mp3") -> bool:

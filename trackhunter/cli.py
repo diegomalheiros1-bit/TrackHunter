@@ -143,6 +143,7 @@ def run(argv: list[str] | None = None, stop_event=None) -> None:
                 download_format=args.download_format,
                 search_timeout_ms=args.search_timeout,
                 stop_event=stop_event,
+                on_history_changed=lambda updated_history: save_history(history_path, updated_history),
             )
             save_history(history_path, history)
             # Salva log final da execucao.
