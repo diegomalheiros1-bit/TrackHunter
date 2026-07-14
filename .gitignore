@@ -9,6 +9,7 @@ venv/
 
 # Runtime output
 logs/*.csv
+logs/*.log
 logs/*.txt
 downloads/*
 state/*.json
