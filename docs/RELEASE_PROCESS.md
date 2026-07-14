@@ -89,10 +89,12 @@ The generated setup is too large for a normal Git commit. Publish the generator 
 
 ## Current validated state
 
-The branch `refactor/reliability-and-maintainability` currently has:
+The `main` branch currently has:
 
 - technical baseline captured;
-- unit tests for core helpers;
+- unit tests for core helpers, config and logging;
 - safer history persistence;
+- typed runtime config;
+- runtime technical log at `logs/trackhunter-runtime.log`;
 - updated executable and installer generated locally;
-- `python -m pytest -v` passing with 42 tests.
+- `python -m pytest -v` passing with 49 tests.

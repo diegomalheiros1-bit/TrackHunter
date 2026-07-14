@@ -2,7 +2,7 @@
 
 TrackHunter e uma automacao em Python + Playwright para buscar faixas no Muzpa, baixar arquivos MP3 ou AIFF e manter um historico local para evitar downloads duplicados.
 
-> Estado tecnico atual: a branch `refactor/reliability-and-maintainability` adiciona baseline tecnico, testes automatizados e persistencia de historico mais segura sem mudar o fluxo principal da interface ou da CLI.
+> Estado tecnico atual: a `main` contem a versao definitiva mais recente, com baseline tecnico, testes automatizados, configuracao tipada, logging tecnico e persistencia de historico mais segura sem mudar o fluxo principal da interface ou da CLI.
 
 ## O Que Ele Faz
 

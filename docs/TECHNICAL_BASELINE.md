@@ -1,13 +1,13 @@
 # TrackHunter technical baseline
 
-Baseline captured on 2026-07-13 on branch `refactor/reliability-and-maintainability`.
+Baseline originally captured on 2026-07-13 during the reliability and maintainability pass.
 
 ## Version
 
 - Current release version: `v2.1`
 - Current GUI window title: `TrackHunter v2.1`
-- Current branch at baseline start: `main`
-- Working branch for this improvement pass: `refactor/reliability-and-maintainability`
+- Current definitive branch: `main`
+- Latest validated commit on main: `58629f5`
 
 ## Current structure
 
@@ -25,7 +25,6 @@ Baseline captured on 2026-07-13 on branch `refactor/reliability-and-maintainabil
 ## Baseline commands executed
 
 ```powershell
-git switch -c refactor/reliability-and-maintainability
 Get-Content -Raw RELEASE_VERSION.txt
 python -m trackhunter.cli --help
 $p = Start-Process -FilePath python -ArgumentList '-m','trackhunter.app' -PassThru -WindowStyle Hidden; Start-Sleep -Seconds 5; if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }

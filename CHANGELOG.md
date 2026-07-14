@@ -4,21 +4,24 @@
 
 ### Added
 - `docs/TECHNICAL_BASELINE.md` com estado inicial, comandos executados, artefatos gerados, riscos e limitacoes.
-- Suite inicial de testes automatizados com `pytest`, cobrindo utilitarios, matching, historico e relatorios.
+- Suite inicial de testes automatizados com `pytest`, cobrindo utilitarios, matching, historico, relatorios, configuracao e logging.
 - `requirements-dev.txt` para dependencias de teste.
 - `pyproject.toml` com configuracao inicial de `pytest`.
 - Documentacao tecnica em `docs/ARCHITECTURE.md`, `docs/RELEASE_PROCESS.md` e `docs/INSTALLER.md`.
+- Configuracao tipada em `trackhunter/config.py` para paths, formato, timeouts e credenciais.
+- Logging tecnico em `trackhunter/logging_config.py`, com arquivo `logs/trackhunter-runtime.log`.
 
 ### Changed
 - Historico agora e salvo com escrita atomica por arquivo temporario e substituicao do JSON final.
 - CLI passa callback para persistir o historico apos cada faixa resolvida ou marcada como nao encontrada.
+- GUI passa credenciais diretamente para o worker, sem alterar variaveis de ambiente globais.
 - Documentacao principal atualizada com testes, instalador, artefatos e fluxo de distribuicao.
 
 ### Fixed
 - JSON de historico corrompido agora gera backup `track_history.corrupted_YYYYMMDD_HHMMSS.json` e nao impede a abertura do historico.
 
 ### Tested
-- `python -m pytest -v`: 42 testes passando.
+- `python -m pytest -v`: 49 testes passando.
 - `python -m trackhunter.cli --help`: validado.
 - Executavel em pasta, executavel onefile e instalador foram regerados localmente para validacao.
 
