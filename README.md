@@ -259,7 +259,7 @@ Cobertura atual:
 - `tests/test_config.py`: configuracao tipada, validacao de paths, formatos e credenciais.
 - `tests/test_logging_config.py`: log tecnico em arquivo e handler para interface grafica.
 
-Resultado validado nesta branch:
+Resultado validado na `main`:
 
 ```text
 49 passed

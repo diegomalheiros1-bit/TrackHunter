@@ -7,7 +7,7 @@ Baseline originally captured on 2026-07-13 during the reliability and maintainab
 - Current release version: `v2.1`
 - Current GUI window title: `TrackHunter v2.1`
 - Current definitive branch: `main`
-- Latest validated commit on main: `58629f5`
+- Latest validated state is tracked on `main`; use `git log -1` for the current commit.
 
 ## Current structure
 
@@ -56,11 +56,13 @@ powershell -ExecutionPolicy Bypass -File scripts\create_release.ps1
 ## Generated artifacts
 
 - `dist/TrackHunter/TrackHunter.exe`
-  - Size observed: 3,475,918 bytes.
+  - Size observed on 2026-07-14: 3,483,388 bytes.
 - `release/TrackHunter-v2.1.zip`
-  - Size observed: 384,631,516 bytes.
+  - Size observed on 2026-07-14: 384,638,700 bytes.
 - `release/TrackHunter-v2.1-Setup.exe`
-  - Size observed: 380,870,656 bytes.
+  - Size observed on 2026-07-14: 380,882,944 bytes.
+- `dist-onefile/TrackHunter.exe`
+  - Size observed on 2026-07-14: 382,205,470 bytes.
 
 The generated `release/` and `dist*/` artifacts are ignored by Git and are not suitable for normal GitHub commits because the setup executable is larger than GitHub's 100 MB file limit.
 
@@ -123,12 +125,12 @@ These warnings did not prevent the executable from being generated.
 
 ## Current acceptance status
 
-- Baseline branch created: done.
+- Definitive branch updated: `main`.
 - CLI help smoke test: passed.
 - GUI launch smoke test: passed.
 - Executable generation: passed.
 - Installer generation: passed.
 - Release ZIP generation: passed.
-- Automated unit tests: not present yet.
+- Automated unit tests: 49 tests passing.
 - Ruff: not configured yet.
 - GitHub Actions: not configured yet.

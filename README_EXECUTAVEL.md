@@ -8,6 +8,13 @@ Ultima release final gerada: `v2.1`.
 
 A versao `v2.1` esta salva localmente, compilada em `dist/TrackHunter`, empacotada em `release/TrackHunter-v2.1.zip` e com instalador em `release/TrackHunter-v2.1-Setup.exe`.
 
+Artefatos locais mais recentes:
+
+- `dist/TrackHunter/TrackHunter.exe` gerado em `2026-07-14 11:38`.
+- `dist-onefile/TrackHunter.exe` gerado em `2026-07-14 11:10`.
+- `release/TrackHunter-v2.1.zip` gerado em `2026-07-14 11:39`.
+- `release/TrackHunter-v2.1-Setup.exe` gerado em `2026-07-14 11:14`.
+
 ## Opcoes
 
 - `release/TrackHunter-<versao>.zip`
@@ -43,6 +50,7 @@ A versao `v2.1` esta salva localmente, compilada em `dist/TrackHunter`, empacota
 - A tela principal usa layout responsivo com quatro quadros alinhados para diferentes resolucoes.
 - Downloads vao para `downloads/`.
 - Logs vao para `logs/`.
+- Log tecnico de diagnostico fica em `logs/trackhunter-runtime.log`.
 - Historico fica em `state/track_history.json`.
 - A lista salva fica em `state/tracklist.txt`.
 - O historico usa escrita atomica para reduzir risco de corrupcao.

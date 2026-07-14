@@ -1,6 +1,6 @@
 # Changelog
 
-## Em desenvolvimento - confiabilidade e manutencao
+## Main atual - confiabilidade e manutencao
 
 ### Added
 - `docs/TECHNICAL_BASELINE.md` com estado inicial, comandos executados, artefatos gerados, riscos e limitacoes.
@@ -23,7 +23,7 @@
 ### Tested
 - `python -m pytest -v`: 49 testes passando.
 - `python -m trackhunter.cli --help`: validado.
-- Executavel em pasta, executavel onefile e instalador foram regerados localmente para validacao.
+- Executavel em pasta, executavel onefile, ZIP e instalador foram regerados localmente para validacao em 2026-07-14.
 
 ## v2.1 - 2026-07-09
 
