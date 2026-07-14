@@ -4,8 +4,8 @@ Baseline originally captured on 2026-07-13 during the reliability and maintainab
 
 ## Version
 
-- Current release version: `v2.1`
-- Current GUI window title: `TrackHunter v2.1`
+- Current release version: `v2.2`
+- Current GUI window title: `TrackHunter v2.2`
 - Current definitive branch: `main`
 - Latest validated state is tracked on `main`; use `git log -1` for the current commit.
 
@@ -18,7 +18,7 @@ Baseline originally captured on 2026-07-13 during the reliability and maintainab
 - `trackhunter/history.py`: local history persistence.
 - `trackhunter/report.py`: text report/log file generation.
 - `trackhunter/utils.py`: normalization, track parsing and tracklist loading.
-- `scripts/create_release.ps1`: copies `dist/TrackHunter` into `release/TrackHunter-v2.1` and creates the ZIP.
+- `scripts/create_release.ps1`: copies `dist/TrackHunter` into `release/TrackHunter-v2.2` and creates the ZIP.
 - `scripts/create_installer.ps1`: creates a Windows setup executable with terms acceptance, destination selection, shortcuts, registry entry and uninstaller.
 - `TrackHunterApp.spec`: PyInstaller folder-based build recipe.
 
@@ -53,16 +53,12 @@ Release ZIP:
 powershell -ExecutionPolicy Bypass -File scripts\create_release.ps1
 ```
 
-## Generated artifacts
+## Expected v2.2 artifacts after build
 
 - `dist/TrackHunter/TrackHunter.exe`
-  - Size observed on 2026-07-14: 3,483,388 bytes.
-- `release/TrackHunter-v2.1.zip`
-  - Size observed on 2026-07-14: 384,638,700 bytes.
-- `release/TrackHunter-v2.1-Setup.exe`
-  - Size observed on 2026-07-14: 380,882,944 bytes.
+- `release/TrackHunter-v2.2.zip`
+- `release/TrackHunter-v2.2-Setup.exe`
 - `dist-onefile/TrackHunter.exe`
-  - Size observed on 2026-07-14: 382,205,470 bytes.
 
 The generated `release/` and `dist*/` artifacts are ignored by Git and are not suitable for normal GitHub commits because the setup executable is larger than GitHub's 100 MB file limit.
 
@@ -71,7 +67,7 @@ The generated `release/` and `dist*/` artifacts are ignored by Git and are not s
 The current installer:
 
 - opens a GUI setup window;
-- shows `TrackHunter v2.1`;
+- shows `TrackHunter v2.2`;
 - requires accepting the TrackHunter terms of use before continuing;
 - lets the user select an installation directory;
 - installs `TrackHunter.exe`;
@@ -128,9 +124,9 @@ These warnings did not prevent the executable from being generated.
 - Definitive branch updated: `main`.
 - CLI help smoke test: passed.
 - GUI launch smoke test: passed.
-- Executable generation: passed.
-- Installer generation: passed.
-- Release ZIP generation: passed.
+- Executable generation: pending for final v2.2 package.
+- Installer generation: pending for final v2.2 package.
+- Release ZIP generation: pending for final v2.2 package.
 - Automated unit tests: 49 tests passing.
 - Ruff: not configured yet.
 - GitHub Actions: not configured yet.

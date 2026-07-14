@@ -877,7 +877,7 @@ class HistoryDialog(QDialog):
 class TrackHunterWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("TrackHunter v2.1")
+        self.setWindowTitle("TrackHunter v2.2")
         self.setWindowIcon(QIcon(str(asset_path("app_icon.png"))))
         self.setMinimumSize(1180, 680)
 

@@ -2,18 +2,18 @@
 
 Use o instalador `.exe` para uma experiencia mais convencional no Windows. O ZIP continua disponivel como pacote portatil em pasta.
 
-Versao em desenvolvimento definida: `v2.1`.
+Versao em desenvolvimento definida: `v2.2`.
 
-Ultima release final gerada: `v2.1`.
+Proxima release preparada: `v2.2`.
 
-A versao `v2.1` esta salva localmente, compilada em `dist/TrackHunter`, empacotada em `release/TrackHunter-v2.1.zip` e com instalador em `release/TrackHunter-v2.1-Setup.exe`.
+A versao `v2.2` esta configurada no codigo, no instalador e na documentacao. Gere os artefatos finais depois da validacao local da interface.
 
-Artefatos locais mais recentes:
+Artefatos esperados apos build:
 
-- `dist/TrackHunter/TrackHunter.exe` gerado em `2026-07-14 11:38`.
-- `dist-onefile/TrackHunter.exe` gerado em `2026-07-14 11:10`.
-- `release/TrackHunter-v2.1.zip` gerado em `2026-07-14 11:39`.
-- `release/TrackHunter-v2.1-Setup.exe` gerado em `2026-07-14 11:14`.
+- `dist/TrackHunter/TrackHunter.exe`
+- `dist-onefile/TrackHunter.exe`
+- `release/TrackHunter-v2.2.zip`
+- `release/TrackHunter-v2.2-Setup.exe`
 
 ## Opcoes
 
@@ -26,11 +26,11 @@ Artefatos locais mais recentes:
 - `release/TrackHunter-<versao>/TrackHunter.exe`
   - Executavel principal. O usuario deve clicar duas vezes nele para abrir o programa.
 
-- `release/TrackHunter-v2.1.zip`
+- `release/TrackHunter-v2.2.zip`
   - ZIP atual gerado para distribuicao.
 
 - `dist/TrackHunter/TrackHunter.exe`
-  - Executavel local de desenvolvimento da versao `v2.1`.
+  - Executavel local de desenvolvimento da versao `v2.2`.
 
 - `dist-onefile/TrackHunter.exe`
   - Executavel unico usado como entrada do instalador.
@@ -61,7 +61,7 @@ Artefatos locais mais recentes:
 Para usuarios finais, prefira enviar:
 
 ```text
-release/TrackHunter-v2.1-Setup.exe
+release/TrackHunter-v2.2-Setup.exe
 ```
 
 O instalador:
@@ -77,7 +77,7 @@ Se usar o ZIP, nao mova o executavel sozinho. Depois de extrair a pasta inteira,
 
 ## Gerar um novo pacote
 
-1. Atualize `RELEASE_VERSION.txt` para uma nova versao (exemplo: `v2.1.0`, `v2.1.1-hotfix`).
+1. Atualize `RELEASE_VERSION.txt` para uma nova versao (exemplo: `v2.2.0`, `v2.2.1-hotfix`).
 2. Rode os testes.
 3. Recompile o executavel em pasta.
 4. Recompile o executavel unico.
@@ -115,5 +115,5 @@ powershell -ExecutionPolicy Bypass -File scripts\create_installer.ps1
 Opcionalmente, voce pode forcar a versao pelo comando:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\create_release.ps1 -Version v2.1.0
+powershell -ExecutionPolicy Bypass -File scripts\create_release.ps1 -Version v2.2.0
 ```

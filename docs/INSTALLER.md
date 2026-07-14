@@ -17,7 +17,7 @@ dist-onefile/TrackHunter.exe
 and creates:
 
 ```text
-release/TrackHunter-v2.1-Setup.exe
+release/TrackHunter-v2.2-Setup.exe
 ```
 
 ## User flow

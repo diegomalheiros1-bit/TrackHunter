@@ -171,8 +171,8 @@ Pela tela voce pode:
 A versao oficial de distribuicao e controlada por:
 
 - `RELEASE_VERSION.txt`
-- Versao em desenvolvimento: `v2.1`
-- Ultima release gerada: `v2.1`
+- Versao em desenvolvimento: `v2.2`
+- Proxima release preparada: `v2.2`
 
 Com isso, os artefatos finais sempre seguem o padrao:
 
@@ -180,10 +180,10 @@ Com isso, os artefatos finais sempre seguem o padrao:
 - `release/TrackHunter-<versao>.zip`
 - `release/TrackHunter-<versao>-Setup.exe`
 
-Release atual gerada:
+Artefatos esperados para a release `v2.2` apos build:
 
-- `release/TrackHunter-v2.1/TrackHunter.exe`
-- `release/TrackHunter-v2.1.zip`
+- `release/TrackHunter-v2.2/TrackHunter.exe`
+- `release/TrackHunter-v2.2.zip`
 
 Executavel local de desenvolvimento:
 
@@ -276,7 +276,7 @@ powershell -ExecutionPolicy Bypass -File scripts\create_installer.ps1
 Ele usa `dist-onefile/TrackHunter.exe` e gera:
 
 ```text
-release/TrackHunter-v2.1-Setup.exe
+release/TrackHunter-v2.2-Setup.exe
 ```
 
 Fluxo atual:

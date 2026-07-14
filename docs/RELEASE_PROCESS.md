@@ -11,7 +11,7 @@ RELEASE_VERSION.txt
 Current version:
 
 ```text
-v2.1
+v2.2
 ```
 
 ## Local validation
@@ -50,8 +50,8 @@ powershell -ExecutionPolicy Bypass -File scripts\create_release.ps1
 Outputs:
 
 ```text
-release/TrackHunter-v2.1/
-release/TrackHunter-v2.1.zip
+release/TrackHunter-v2.2/
+release/TrackHunter-v2.2.zip
 ```
 
 ## One-file executable
@@ -80,7 +80,7 @@ powershell -ExecutionPolicy Bypass -File scripts\create_installer.ps1
 Output:
 
 ```text
-release/TrackHunter-v2.1-Setup.exe
+release/TrackHunter-v2.2-Setup.exe
 ```
 
 ## GitHub note
@@ -96,5 +96,5 @@ The `main` branch currently has:
 - safer history persistence;
 - typed runtime config;
 - runtime technical log at `logs/trackhunter-runtime.log`;
-- updated executable, ZIP package and installer generated locally;
+- `v2.2` version prepared for executable, ZIP package and installer generation;
 - `python -m pytest -v` passing with 49 tests.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Main atual - confiabilidade e manutencao
+## v2.2 - 2026-07-14
 
 ### Added
 - `docs/TECHNICAL_BASELINE.md` com estado inicial, comandos executados, artefatos gerados, riscos e limitacoes.
@@ -10,12 +10,14 @@
 - Documentacao tecnica em `docs/ARCHITECTURE.md`, `docs/RELEASE_PROCESS.md` e `docs/INSTALLER.md`.
 - Configuracao tipada em `trackhunter/config.py` para paths, formato, timeouts e credenciais.
 - Logging tecnico em `trackhunter/logging_config.py`, com arquivo `logs/trackhunter-runtime.log`.
+- Versao de distribuicao atualizada para `v2.2`.
 
 ### Changed
 - Historico agora e salvo com escrita atomica por arquivo temporario e substituicao do JSON final.
 - CLI passa callback para persistir o historico apos cada faixa resolvida ou marcada como nao encontrada.
 - GUI passa credenciais diretamente para o worker, sem alterar variaveis de ambiente globais.
 - Documentacao principal atualizada com testes, instalador, artefatos e fluxo de distribuicao.
+- Titulo da janela atualizado para `TrackHunter v2.2`.
 
 ### Fixed
 - JSON de historico corrompido agora gera backup `track_history.corrupted_YYYYMMDD_HHMMSS.json` e nao impede a abertura do historico.
@@ -23,7 +25,7 @@
 ### Tested
 - `python -m pytest -v`: 49 testes passando.
 - `python -m trackhunter.cli --help`: validado.
-- Executavel em pasta, executavel onefile, ZIP e instalador foram regerados localmente para validacao em 2026-07-14.
+- Artefatos finais devem ser regerados apos a validacao visual da interface `v2.2`.
 
 ## v2.1 - 2026-07-09
 
