@@ -38,7 +38,7 @@ class AppConfig:
     force_download: bool = False
     retry_missing_only: bool = False
     wait_login_ms: int = 90000
-    search_timeout_ms: int = 15000
+    search_timeout_ms: int = 25000
 
     def normalize(self) -> "AppConfig":
         self.tracklist_path = self.tracklist_path.resolve()

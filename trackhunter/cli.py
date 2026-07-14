@@ -53,7 +53,7 @@ def run(argv: list[str] | None = None, stop_event=None, credentials: Credentials
     # Tempo maximo para aguardar login.
     parser.add_argument("--wait-login", type=int, default=90000, help="Timeout de login em ms")
     # Tempo maximo para aguardar resultados de cada pesquisa.
-    parser.add_argument("--search-timeout", type=int, default=15000, help="Timeout da pesquisa de cada musica em ms")
+    parser.add_argument("--search-timeout", type=int, default=25000, help="Timeout da pesquisa de cada musica em ms")
     # Se ativo, usuario faz login manual na janela.
     parser.add_argument("--manual-login", action="store_true", help="Nao preenche login automaticamente")
     # Arquivo JSON usado para evitar downloads duplicados e guardar nao encontradas.

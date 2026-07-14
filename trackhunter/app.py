@@ -1378,6 +1378,13 @@ class TrackHunterWindow(QMainWindow):
             self.logo_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
             header.addWidget(self.logo_label)
         header.addStretch(1)
+        developer_signature = QLabel("Desenvolvido por Diego Stanisci Malheiros")
+        developer_signature.setObjectName("DeveloperSignature")
+        developer_signature.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        developer_signature.setStyleSheet(
+            "font-size: 11px; font-weight: 400; font-style: normal; color: rgba(148, 163, 184, 150);"
+        )
+        header.addWidget(developer_signature, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         root.addWidget(header_widget)
         subtitle = QLabel("Automação de busca e downloads de músicas no MUZPA")
         subtitle.setObjectName("Hint")
@@ -1662,7 +1669,7 @@ class TrackHunterWindow(QMainWindow):
         self.downloads_input.setText(str(self.base_dir / "downloads"))
         self.manual_login_check.setChecked(False)
         self.timeout_spin.setValue(30000)
-        self.search_timeout_spin.setValue(15000)
+        self.search_timeout_spin.setValue(25000)
         self._ensure_tracklist_file()
         self._validate_tracklist_status()
         self._reset_summary()

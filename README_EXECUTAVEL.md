@@ -10,10 +10,10 @@ A versao `v2.2` esta salva localmente, compilada em `dist/TrackHunter`, empacota
 
 Artefatos locais mais recentes:
 
-- `dist/TrackHunter/TrackHunter.exe` gerado em `2026-07-14 12:40` (`3.483.696 bytes`).
-- `dist-onefile/TrackHunter.exe` gerado em `2026-07-14 12:42` (`382.204.191 bytes`).
-- `release/TrackHunter-v2.2.zip` gerado em `2026-07-14 12:41` (`384.639.754 bytes`).
-- `release/TrackHunter-v2.2-Setup.exe` gerado em `2026-07-14 12:45` (`380.882.944 bytes`).
+- `dist/TrackHunter/TrackHunter.exe` gerado em `2026-07-14 18:48` (`3.483.988 bytes`).
+- `dist-onefile/TrackHunter.exe` gerado em `2026-07-14 18:49` (`382.206.378 bytes`).
+- `release/TrackHunter-v2.2.zip` gerado em `2026-07-14 18:50` (`384.639.087 bytes`).
+- `release/TrackHunter-v2.2-Setup.exe` gerado em `2026-07-14 19:11` (`380.882.944 bytes`).
 
 ## Opcoes
 
@@ -42,7 +42,7 @@ Artefatos locais mais recentes:
 
 - Na interface, use o botao `Tracklist` para adicionar, editar e salvar as musicas.
 - Use os toggles `Download MP3` e `Download AIFF` em `Opcoes` para escolher o formato antes de iniciar.
-- Em internet lenta, aumente `Timeout Busca` para o app aguardar mais pelos resultados antes de marcar uma musica como nao encontrada.
+- O `Timeout Busca` inicia em `25000 ms` por padrao e pode ser aumentado em conexoes lentas.
 - O indicador de conexao mostra uma leitura simples da resposta do Muzpa.
 - O historico respeita o formato escolhido, entao uma faixa ja baixada em `MP3` ainda pode ser baixada em `AIFF`.
 - O modo `Somente nao encontradas` tambem respeita o formato escolhido.

@@ -156,7 +156,7 @@ Pela tela voce pode:
 
 - informar usuario e senha do MUZPA
 - escolher o formato de download em `Opcoes`: `Download MP3` ou `Download AIFF`
-- ajustar `Timeout Busca` para aguardar mais em conexoes lentas antes de marcar uma musica como nao encontrada
+- ajustar `Timeout Busca`, que inicia em `25000 ms`, para aguardar mais em conexoes lentas antes de marcar uma musica como nao encontrada
 - acompanhar o indicador de conexao com o Muzpa na tela principal
 - abrir o editor Tracklist para adicionar, editar e salvar musicas sem mexer em arquivo manualmente
 - escolher a pasta de downloads e abrir arquivos gerados
@@ -309,7 +309,7 @@ Para cada faixa, o TrackHunter tenta:
 
 Ele prioriza somente botoes do formato escolhido. Para `MP3`, procura botoes `MP3`; para `AIFF`, alterna o Muzpa para `LOSSLESS` e procura botoes `AIFF`. O download automatico nao usa `ZIP/Download` como fallback.
 
-Em conexoes lentas, use `Timeout Busca` na interface ou `--search-timeout` no CLI para aumentar o tempo maximo de espera pelos resultados antes de considerar uma musica como nao encontrada.
+Em conexoes lentas, use `Timeout Busca` na interface ou `--search-timeout` no CLI para ajustar o tempo maximo de espera pelos resultados antes de considerar uma musica como nao encontrada. O padrao atual e `25000 ms`.
 
 Antes de clicar, o resultado precisa bater o titulo em ordem, considerando tambem palavras curtas como `me`, `you`, `it`, `on` e `up`. Quando a tracklist informa artista e versao/remix, esses dados tambem entram na validacao para reduzir falso positivo.
 

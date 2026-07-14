@@ -253,7 +253,7 @@ Caso nao concorde com qualquer uma das disposicoes acima, recomenda-se nao utili
 
     $headerPanel = New-Object System.Windows.Forms.Panel
     $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
-    $headerPanel.Size = New-Object System.Drawing.Size(640, 122)
+    $headerPanel.Size = New-Object System.Drawing.Size(640, 138)
     $headerPanel.BackColor = $colorHeader
     $form.Controls.Add($headerPanel)
 
@@ -261,7 +261,7 @@ Caso nao concorde com qualquer uma das disposicoes acima, recomenda-se nao utili
     $title.Text = "TrackHunter __TRACKHUNTER_VERSION__"
     $title.Font = $fontTitle
     $title.ForeColor = [System.Drawing.Color]::White
-    $title.Location = New-Object System.Drawing.Point(32, 24)
+    $title.Location = New-Object System.Drawing.Point(32, 20)
     $title.Size = New-Object System.Drawing.Size(560, 36)
     $headerPanel.Controls.Add($title)
 
@@ -269,7 +269,7 @@ Caso nao concorde com qualquer uma das disposicoes acima, recomenda-se nao utili
     $versionLabel.Text = "Versao a instalar: __TRACKHUNTER_VERSION__"
     $versionLabel.Font = $fontSubtitle
     $versionLabel.ForeColor = [System.Drawing.Color]::FromArgb(191, 219, 254)
-    $versionLabel.Location = New-Object System.Drawing.Point(34, 62)
+    $versionLabel.Location = New-Object System.Drawing.Point(34, 58)
     $versionLabel.Size = New-Object System.Drawing.Size(560, 22)
     $headerPanel.Controls.Add($versionLabel)
 
@@ -277,12 +277,12 @@ Caso nao concorde com qualquer uma das disposicoes acima, recomenda-se nao utili
     $description.Text = "Leia e aceite o Termo de Uso para continuar com a instalacao."
     $description.Font = $fontRegular
     $description.ForeColor = [System.Drawing.Color]::FromArgb(226, 232, 240)
-    $description.Location = New-Object System.Drawing.Point(34, 86)
-    $description.Size = New-Object System.Drawing.Size(560, 28)
+    $description.Location = New-Object System.Drawing.Point(34, 82)
+    $description.Size = New-Object System.Drawing.Size(560, 44)
     $headerPanel.Controls.Add($description)
 
     $termsPanel = New-Object System.Windows.Forms.Panel
-    $termsPanel.Location = New-Object System.Drawing.Point(32, 146)
+    $termsPanel.Location = New-Object System.Drawing.Point(32, 156)
     $termsPanel.Size = New-Object System.Drawing.Size(576, 184)
     $termsPanel.BackColor = $colorPanel
     $termsPanel.BorderStyle = "FixedSingle"
@@ -317,7 +317,7 @@ Caso nao concorde com qualquer uma das disposicoes acima, recomenda-se nao utili
     $termsPanel.Controls.Add($acceptCheckbox)
 
     $contentPanel = New-Object System.Windows.Forms.Panel
-    $contentPanel.Location = New-Object System.Drawing.Point(32, 146)
+    $contentPanel.Location = New-Object System.Drawing.Point(32, 156)
     $contentPanel.Size = New-Object System.Drawing.Size(576, 184)
     $contentPanel.BackColor = $colorPanel
     $contentPanel.BorderStyle = "FixedSingle"
@@ -579,11 +579,21 @@ if (($null -ne $LASTEXITCODE) -and ($LASTEXITCODE -ne 0)) {
     throw "Falha ao criar instalador. Codigo IExpress: $LASTEXITCODE"
 }
 
+$minimumInstallerLength = [int64]([Math]::Max(1048576, ((Get-Item -LiteralPath $oneFileExe).Length * 0.90)))
+$lastInstallerLength = 0
+$stableInstallerChecks = 0
 $deadline = (Get-Date).AddMinutes(8)
 while ((Get-Date) -lt $deadline) {
     if (Test-Path -LiteralPath $tempInstallerPath) {
         $tempInstaller = Get-Item -LiteralPath $tempInstallerPath
-        if ($tempInstaller.Length -gt 0) {
+        if ($tempInstaller.Length -ge $minimumInstallerLength -and $tempInstaller.Length -eq $lastInstallerLength) {
+            $stableInstallerChecks++
+        }
+        else {
+            $stableInstallerChecks = 0
+        }
+        $lastInstallerLength = $tempInstaller.Length
+        if ($stableInstallerChecks -ge 2) {
             break
         }
     }
@@ -592,6 +602,11 @@ while ((Get-Date) -lt $deadline) {
 
 if (-not (Test-Path -LiteralPath $tempInstallerPath)) {
     throw "Instalador nao foi criado em: $tempInstallerPath"
+}
+
+$tempInstaller = Get-Item -LiteralPath $tempInstallerPath
+if ($tempInstaller.Length -lt $minimumInstallerLength) {
+    throw "Instalador gerado esta incompleto: $($tempInstaller.Length) bytes em $tempInstallerPath"
 }
 
 if (Test-Path -LiteralPath $installerPath) {

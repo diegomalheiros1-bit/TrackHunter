@@ -13,6 +13,7 @@
 - Versao de distribuicao atualizada para `v2.2`.
 - Relatorio de densidade visual em `docs/DENSITY_REFACTOR_REPORT.md`.
 - Screenshots comparativos antes/depois em `docs/screenshots/density_refactor/`.
+- Assinatura institucional no cabecalho da aplicacao: `Desenvolvido por Diego Stanisci Malheiros`.
 
 ### Changed
 - Historico agora e salvo com escrita atomica por arquivo temporario e substituicao do JSON final.
@@ -22,9 +23,12 @@
 - Titulo da janela atualizado para `TrackHunter v2.2`.
 - Interface principal compactada com reducao estimada de `19,24%` no proxy de densidade vertical, preservando identidade visual.
 - Margens, spacings, cards, log, header e alturas dos paineis foram padronizados por constantes de escala.
+- `Timeout Busca` padrao alterado para `25000 ms` na interface, configuracao, CLI e fallback interno.
 
 ### Fixed
 - JSON de historico corrompido agora gera backup `track_history.corrupted_YYYYMMDD_HHMMSS.json` e nao impede a abertura do historico.
+- Texto do cabecalho do instalador ajustado para nao cortar a descricao apos aceitar o Termo de Uso.
+- Gerador do instalador agora aguarda o setup final estabilizar antes de copiar para `release/`, evitando publicar stub incompleto.
 
 ### Tested
 - `python -m pytest -v`: 49 testes passando.

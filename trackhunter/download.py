@@ -55,7 +55,7 @@ def process_tracks(
     history,
     force_download: bool = False,
     download_format: str = "mp3",
-    search_timeout_ms: int = 15000,
+    search_timeout_ms: int = 25000,
     stop_event=None,
     on_history_changed: Callable[[dict], None] | None = None,
 ) -> List[TrackResult]:
@@ -72,7 +72,7 @@ def process_tracks(
     track_list = list(tracks)
     total = len(track_list)
     normalized_format = "aiff" if str(download_format).lower() == "aiff" else "mp3"
-    normalized_search_timeout_ms = max(2500, int(search_timeout_ms or 15000))
+    normalized_search_timeout_ms = max(2500, int(search_timeout_ms or 25000))
     select_site_download_mode(page, normalized_format, stop_event=stop_event)
 
     def print_progress(current: int, status: str) -> None:
