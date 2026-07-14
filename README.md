@@ -180,7 +180,7 @@ Com isso, os artefatos finais sempre seguem o padrao:
 - `release/TrackHunter-<versao>.zip`
 - `release/TrackHunter-<versao>-Setup.exe`
 
-Artefatos esperados para a release `v2.2` apos build:
+Release atual gerada:
 
 - `release/TrackHunter-v2.2/TrackHunter.exe`
 - `release/TrackHunter-v2.2.zip`
@@ -264,6 +264,16 @@ Resultado validado na `main`:
 ```text
 49 passed
 ```
+
+## Densidade Visual
+
+A versao `v2.2` inclui uma compactacao tecnica da interface principal sem alterar tema, cores, fontes ou identidade visual.
+
+- reducao estimada de `19,24%` no proxy de densidade vertical;
+- margens, spacings, cards, header, log e alturas dos paineis revisados;
+- constantes de escala centralizadas em `trackhunter/app.py`;
+- relatorio em `docs/DENSITY_REFACTOR_REPORT.md`;
+- screenshots comparativos em `docs/screenshots/density_refactor/`.
 
 ## Instalador Windows
 

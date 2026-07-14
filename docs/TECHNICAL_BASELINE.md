@@ -53,12 +53,16 @@ Release ZIP:
 powershell -ExecutionPolicy Bypass -File scripts\create_release.ps1
 ```
 
-## Expected v2.2 artifacts after build
+## Generated v2.2 artifacts
 
 - `dist/TrackHunter/TrackHunter.exe`
+  - Size observed on 2026-07-14: 3,483,696 bytes.
 - `release/TrackHunter-v2.2.zip`
+  - Size observed on 2026-07-14: 384,639,754 bytes.
 - `release/TrackHunter-v2.2-Setup.exe`
+  - Size observed on 2026-07-14: 380,882,944 bytes.
 - `dist-onefile/TrackHunter.exe`
+  - Size observed on 2026-07-14: 382,204,191 bytes.
 
 The generated `release/` and `dist*/` artifacts are ignored by Git and are not suitable for normal GitHub commits because the setup executable is larger than GitHub's 100 MB file limit.
 
@@ -124,9 +128,9 @@ These warnings did not prevent the executable from being generated.
 - Definitive branch updated: `main`.
 - CLI help smoke test: passed.
 - GUI launch smoke test: passed.
-- Executable generation: pending for final v2.2 package.
-- Installer generation: pending for final v2.2 package.
-- Release ZIP generation: pending for final v2.2 package.
+- Executable generation: passed for final v2.2 package.
+- Installer generation: passed for final v2.2 package.
+- Release ZIP generation: passed for final v2.2 package.
 - Automated unit tests: 49 tests passing.
 - Ruff: not configured yet.
 - GitHub Actions: not configured yet.

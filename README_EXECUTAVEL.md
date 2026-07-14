@@ -4,16 +4,16 @@ Use o instalador `.exe` para uma experiencia mais convencional no Windows. O ZIP
 
 Versao em desenvolvimento definida: `v2.2`.
 
-Proxima release preparada: `v2.2`.
+Ultima release final gerada: `v2.2`.
 
-A versao `v2.2` esta configurada no codigo, no instalador e na documentacao. Gere os artefatos finais depois da validacao local da interface.
+A versao `v2.2` esta salva localmente, compilada em `dist/TrackHunter`, empacotada em `release/TrackHunter-v2.2.zip` e com instalador em `release/TrackHunter-v2.2-Setup.exe`.
 
-Artefatos esperados apos build:
+Artefatos locais mais recentes:
 
-- `dist/TrackHunter/TrackHunter.exe`
-- `dist-onefile/TrackHunter.exe`
-- `release/TrackHunter-v2.2.zip`
-- `release/TrackHunter-v2.2-Setup.exe`
+- `dist/TrackHunter/TrackHunter.exe` gerado em `2026-07-14 12:40` (`3.483.696 bytes`).
+- `dist-onefile/TrackHunter.exe` gerado em `2026-07-14 12:42` (`382.204.191 bytes`).
+- `release/TrackHunter-v2.2.zip` gerado em `2026-07-14 12:41` (`384.639.754 bytes`).
+- `release/TrackHunter-v2.2-Setup.exe` gerado em `2026-07-14 12:45` (`380.882.944 bytes`).
 
 ## Opcoes
 

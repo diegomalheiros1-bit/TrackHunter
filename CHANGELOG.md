@@ -11,6 +11,8 @@
 - Configuracao tipada em `trackhunter/config.py` para paths, formato, timeouts e credenciais.
 - Logging tecnico em `trackhunter/logging_config.py`, com arquivo `logs/trackhunter-runtime.log`.
 - Versao de distribuicao atualizada para `v2.2`.
+- Relatorio de densidade visual em `docs/DENSITY_REFACTOR_REPORT.md`.
+- Screenshots comparativos antes/depois em `docs/screenshots/density_refactor/`.
 
 ### Changed
 - Historico agora e salvo com escrita atomica por arquivo temporario e substituicao do JSON final.
@@ -18,6 +20,8 @@
 - GUI passa credenciais diretamente para o worker, sem alterar variaveis de ambiente globais.
 - Documentacao principal atualizada com testes, instalador, artefatos e fluxo de distribuicao.
 - Titulo da janela atualizado para `TrackHunter v2.2`.
+- Interface principal compactada com reducao estimada de `19,24%` no proxy de densidade vertical, preservando identidade visual.
+- Margens, spacings, cards, log, header e alturas dos paineis foram padronizados por constantes de escala.
 
 ### Fixed
 - JSON de historico corrompido agora gera backup `track_history.corrupted_YYYYMMDD_HHMMSS.json` e nao impede a abertura do historico.
@@ -25,7 +29,7 @@
 ### Tested
 - `python -m pytest -v`: 49 testes passando.
 - `python -m trackhunter.cli --help`: validado.
-- Artefatos finais devem ser regerados apos a validacao visual da interface `v2.2`.
+- Build final v2.2 recompilado localmente para executavel em pasta, executavel unico, ZIP e instalador.
 
 ## v2.1 - 2026-07-09
 

@@ -96,5 +96,5 @@ The `main` branch currently has:
 - safer history persistence;
 - typed runtime config;
 - runtime technical log at `logs/trackhunter-runtime.log`;
-- `v2.2` version prepared for executable, ZIP package and installer generation;
+- updated executable, ZIP package and installer generated locally for `v2.2`;
 - `python -m pytest -v` passing with 49 tests.
