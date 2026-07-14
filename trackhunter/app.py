@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 import ctypes
@@ -34,6 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 from .cli import run as run_bot
+from .config import Credentials
 from .history import load_history
 from .report import format_duration
 from .utils import StopRequested, load_tracklist
@@ -625,16 +625,11 @@ class BotWorker(QThread):
         self.stop_event.set()
 
     def run(self) -> None:
-        if self.email:
-            os.environ["MUZPA_EMAIL"] = self.email
-        if self.password:
-            os.environ["MUZPA_PASSWORD"] = self.password
-
         stream = _StreamEmitter(self.output.emit)
         exit_code = 0
         try:
             with redirect_stdout(stream), redirect_stderr(stream):
-                run_bot(self.args, stop_event=self.stop_event)
+                run_bot(self.args, stop_event=self.stop_event, credentials=Credentials(self.email, self.password))
         except StopRequested:
             exit_code = 130
         except Exception as exc:

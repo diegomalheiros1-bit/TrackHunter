@@ -109,9 +109,9 @@ These warnings did not prevent the executable from being generated.
 - `trackhunter/app.py` is a large monolithic file and mixes UI, workers, dialogs, styles and path logic.
 - `scripts/create_installer.ps1` currently embeds installer UI, install script, uninstall script and terms text in one large generator script.
 - Runtime data is still written relative to the executable/base directory, which complicates updates and uninstalls.
-- History persistence needs stronger recovery behavior for corrupted JSON and atomic write guarantees.
-- Logging still depends on text output and UI redirection patterns instead of a shared structured logging pipeline.
-- Automated tests are not present yet.
+- History persistence now has corrupted JSON backup and atomic replace behavior covered by tests.
+- Logging now has a shared runtime file setup, but some user-facing progress still uses text output for CLI/UI compatibility.
+- Automated tests now cover helpers, matching, history, reports, config and logging.
 - Dependencies are not pinned exactly.
 - No CI workflow is present yet.
 

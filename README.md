@@ -256,12 +256,13 @@ Cobertura atual:
 - `tests/test_search.py`: scoring de candidatos e falsos positivos conhecidos.
 - `tests/test_history.py`: persistencia, formatos, JSON corrompido e escrita atomica.
 - `tests/test_report.py`: formatacao de duracao e geracao de logs finais.
-- `tests/test_config.py`: placeholder ate a criacao da configuracao tipada.
+- `tests/test_config.py`: configuracao tipada, validacao de paths, formatos e credenciais.
+- `tests/test_logging_config.py`: log tecnico em arquivo e handler para interface grafica.
 
 Resultado validado nesta branch:
 
 ```text
-42 passed
+49 passed
 ```
 
 ## Instalador Windows
@@ -335,7 +336,8 @@ Estes arquivos/pastas sao artefatos locais de execucao e ficam fora do Git:
 ## Observacoes
 
 - Nao deixe credenciais fixas no codigo.
-- Use variaveis de ambiente para `MUZPA_EMAIL` e `MUZPA_PASSWORD`.
+- Use variaveis de ambiente para `MUZPA_EMAIL` e `MUZPA_PASSWORD` no CLI, ou informe pela tela do app.
+- Consulte `logs/trackhunter-runtime.log` para diagnostico tecnico da execucao.
 - Revise o log TXT depois de cada execucao para validar o que foi baixado.
 - O matching flexivel ajuda com remixes e versoes alternativas, mas o log deve sempre ser conferido.
 
